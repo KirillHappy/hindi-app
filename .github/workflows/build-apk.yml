@@ -19,9 +19,11 @@ jobs:
         run: npm install -g @bubblewrap/cli
 
       - name: Initialize and Build APK
-        # Команда 'yes' автоматически отвечает "y" на все запросы установки JDK и Android SDK
         run: |
-          yes | bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json"
+          # Используем внутренний флаг --yes самого bubblewrap
+          bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
+          
+          # Сборка: отвечаем "да" на лицензии и пропускаем подпись
           yes | bubblewrap build --skipSigning
 
       - name: Upload APK
