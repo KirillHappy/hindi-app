@@ -24,10 +24,16 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Build APK (Без лишних вопросов)
+      - name: Force Configure (Прямая запись конфига)
         run: |
-          # Команда 'twa build' — это упрощенный способ, он не задает вопросов
-          bubblewrap twa build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning
+          mkdir -p ~/.bubblewrap
+          # Записываем пути вручную, чтобы исключить любые вопросы
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
+
+      - name: Build APK
+        run: |
+          # Используем 'yes' на случай, если он захочет спросить что-то еще
+          yes | bubblewrap twa build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
