@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Java (Чтобы он не спрашивал!)
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -24,9 +24,15 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
+      - name: Configure Bubblewrap (Прямая настройка)
+        run: |
+          # Мы вручную создаем конфиг, чтобы он НИЧЕГО не спрашивал
+          mkdir -p ~/.bubblewrap
+          echo '{"jdkPath":"'"$JAVA_HOME"'","androidSdkPath":"/usr/local/lib/android/sdk"}' > ~/.bubblewrap/config.json
+          
       - name: Initialize and Build APK
         run: |
-          # Теперь Java уже есть в системе, вопросов быть не должно
+          # Теперь он обязан увидеть пути и не задавать вопросов
           bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
           yes | bubblewrap build --skipSigning
 
