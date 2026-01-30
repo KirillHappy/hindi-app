@@ -13,14 +13,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build TWA (APK)
-        # Это готовый робот-сборщик, он не задает лишних вопросов
-        uses: fluxer/bubblewrap-action@v1
-        with:
-          manifestUrl: 'https://kirillhappy.github.io/hindi-app/manifest.json'
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Initialize and Build
+        # Мы используем --yes прямо в командах и скармливаем их через конвейер
+        run: |
+          # 1. Создаем проект (отвечаем 'y' на всё)
+          echo "y" | bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
+          
+          # 2. Собираем проект
+          echo "y" | bubblewrap build --skipSigning --yes
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MyHindiApp
-          path: output/*.apk
+          name: HindiApp
+          # Ищем любой созданный apk в текущей папке
+          path: ./*.apk
