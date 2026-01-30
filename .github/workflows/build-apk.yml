@@ -1,11 +1,23 @@
-- name: Initialize and Build
+name: Build Android APK
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Initialize and Build
         run: |
-          # 1. Сразу говорим Bubblewrap, где лежит Java и куда ставить Android SDK
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/home/runner/android-sdk\"}" > ~/.bubblewrap/config.json
-
-          # 2. Запускаем установку и сборку. 
-          # Команда 'yes' будет отвечать 'y' на каждый запрос лицензии Android.
+          
           yes | npx @bubblewrap/cli init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
           yes | npx @bubblewrap/cli build --skipSigning --yes
 
