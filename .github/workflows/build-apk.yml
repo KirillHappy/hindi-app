@@ -15,12 +15,16 @@ jobs:
 
       - name: Initialize and Build
         run: |
+          # 1. Настройка путей
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/home/runner/android-sdk\"}" > ~/.bubblewrap/config.json
-          
-          yes | npx @bubblewrap/cli init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
-          yes | npx @bubblewrap/cli build --skipSigning --yes
 
+          # 2. Создаем файл настроек проекта заранее, чтобы не было вопросов
+          npx @bubblewrap/cli init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --directory="./" --accept_no_prompt
+          
+          # 3. Сборка (теперь без бесконечного 'yes')
+          # Флаг --yes внутри команды обычно достаточно
+          npx @bubblewrap/cli build --skipSigning --yes
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
