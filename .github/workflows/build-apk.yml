@@ -1,22 +1,12 @@
 name: Build Android APK
-on:
-  push:
-    branches: [ main ]
+on: push
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -24,21 +14,10 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Build APK (Final Strike)
+      - name: Create App
         run: |
-          # Мы не скачиваем файл заранее, а даем ссылку напрямую, 
-          # но используем 'yes', чтобы проскочить подтверждение домена
-          yes | bubblewrap build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning --yes
-          
-          # 2. Инициализируем проект из локального файла
-          # Мы используем --yes и заваливаем его ответами "y", чтобы он всё установил
-          yes | bubblewrap init --manifest=local_manifest.json --yes
-          
-          # 3. Финальная сборка
+          # Сначала создаем проект из ссылки (init)
+          # А потом сразу собираем его (build)
+          # 'yes' ответит на все вопросы за нас
+          yes | bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
           yes | bubblewrap build --skipSigning
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-hindi-app-apk
-          path: ./*.apk
