@@ -24,17 +24,11 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Force Configure (Прямая запись конфига)
+      - name: Build APK (Авто-ответ на все вопросы)
         run: |
-          mkdir -p ~/.bubblewrap
-          # Записываем пути вручную, чтобы исключить любые вопросы
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
-
-      - name: Build APK
-        run: |
-          # Используем просто 'build' вместо 'twa build'
-          # Флаг --yes и 'yes |' обеспечат прохождение всех вопросов
-          yes | bubblewrap build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning --yes
+          # Команда 'printf' имитирует нажатие Enter (\n) много раз
+          # Это проскочит и вопрос про JDK, и про домен, и про всё остальное
+          printf '\n\n\n\n\n\n\n\n\n\n' | bubblewrap build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
