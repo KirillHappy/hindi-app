@@ -32,8 +32,9 @@ jobs:
 
       - name: Build APK
         run: |
-          # Используем 'yes' на случай, если он захочет спросить что-то еще
-          yes | bubblewrap twa build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning
+          # Используем просто 'build' вместо 'twa build'
+          # Флаг --yes и 'yes |' обеспечат прохождение всех вопросов
+          yes | bubblewrap build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning --yes
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
