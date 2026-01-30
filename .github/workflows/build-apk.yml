@@ -16,8 +16,7 @@ jobs:
 
       - name: Create App
         run: |
-          # Сначала создаем проект из ссылки (init)
-          # А потом сразу собираем его (build)
-          # 'yes' ответит на все вопросы за нас
-          yes | bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
-          yes | bubblewrap build --skipSigning
+          # Используем флаг --yes, который сам отвечает на вопросы
+          bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
+          # Сборка без бесконечного потока ответов
+          bubblewrap build --skipSigning --yes
