@@ -6,17 +6,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
+      - name: Build TWA (APK)
+        # Это готовый робот-сборщик, он не задает лишних вопросов
+        uses: fluxer/bubblewrap-action@v1
+        with:
+          manifestUrl: 'https://kirillhappy.github.io/hindi-app/manifest.json'
 
-      - name: Create App
-        run: |
-          # Используем флаг --yes, который сам отвечает на вопросы
-          bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
-          # Сборка без бесконечного потока ответов
-          bubblewrap build --skipSigning --yes
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyHindiApp
+          path: output/*.apk
