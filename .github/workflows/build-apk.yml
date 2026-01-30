@@ -24,11 +24,10 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Build APK (Авто-ответ на все вопросы)
+      - name: Build APK (Бесконечный авто-ответ)
         run: |
-          # Команда 'printf' имитирует нажатие Enter (\n) много раз
-          # Это проскочит и вопрос про JDK, и про домен, и про всё остальное
-          printf '\n\n\n\n\n\n\n\n\n\n' | bubblewrap build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning
+          # Команда yes "" будет слать пустую строку (Enter) бесконечно
+          yes "" | bubblewrap build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
