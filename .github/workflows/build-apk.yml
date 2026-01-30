@@ -24,10 +24,11 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Download Manifest and Build
+      - name: Build APK (Final Strike)
         run: |
-          # 1. Скачиваем манифест в файл manifest.json
-          curl -s https://kirillhappy.github.io/hindi-app/manifest.json > local_manifest.json
+          # Мы не скачиваем файл заранее, а даем ссылку напрямую, 
+          # но используем 'yes', чтобы проскочить подтверждение домена
+          yes | bubblewrap build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning --yes
           
           # 2. Инициализируем проект из локального файла
           # Мы используем --yes и заваливаем его ответами "y", чтобы он всё установил
