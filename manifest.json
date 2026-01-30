@@ -1,0 +1,23 @@
+{
+  "name": "Учим Хинди - Полное приложение",
+  "short_name": "Хинди",
+  "description": "Бесплатное приложение для изучения хинди с субтитрами и системой повторения",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#6a11cb",
+  "theme_color": "#2575fc",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "lang": "ru",
+  "orientation": "portrait"
+}
