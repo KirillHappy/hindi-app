@@ -21,7 +21,7 @@ jobs:
       - name: Initialize and Build APK
         # Замени URL ниже на реальный адрес твоего сайта или GitHub Pages
         run: |
-          yes | bubblewrap init --manifest=https://твой-логин.github.io/hindi-app/manifest.json
+          yes | bubblewrap init --manifest=https://https://kirillhappy.github.io/hindi-app/
           bubblewrap build --skipSigning
         # Мы добавили --skipSigning, чтобы сборка не упала из-за отсутствия ключей
 
