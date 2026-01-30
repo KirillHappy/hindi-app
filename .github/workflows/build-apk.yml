@@ -15,15 +15,19 @@ jobs:
         with:
           node-version: 20
 
+      - name: Setup Java (Чтобы он не спрашивал!)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
       - name: Initialize and Build APK
         run: |
-          # Используем внутренний флаг --yes самого bubblewrap
+          # Теперь Java уже есть в системе, вопросов быть не должно
           bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes
-          
-          # Сборка: отвечаем "да" на лицензии и пропускаем подпись
           yes | bubblewrap build --skipSigning
 
       - name: Upload APK
