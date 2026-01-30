@@ -24,22 +24,10 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Configure Bubblewrap (Прямая настройка)
+      - name: Build APK (Без лишних вопросов)
         run: |
-          # Мы вручную создаем конфиг, чтобы он НИЧЕГО не спрашивал
-          mkdir -p ~/.bubblewrap
-          echo '{"jdkPath":"'"$JAVA_HOME"'","androidSdkPath":"/usr/local/lib/android/sdk"}' > ~/.bubblewrap/config.json
-          
-      - name: Initialize and Build APK
-        run: |
-          # Мы скармливаем ему все параметры заранее, чтобы он не переспрашивал
-          bubblewrap init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" \
-                          --metaData.isAssetOnly=true \
-                          --no-check-update \
-                          --yes
-          
-          # Финальная сборка
-          yes | bubblewrap build --skipSigning
+          # Команда 'twa build' — это упрощенный способ, он не задает вопросов
+          bubblewrap twa build --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --skipSigning
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
