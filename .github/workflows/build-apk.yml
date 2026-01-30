@@ -15,16 +15,17 @@ jobs:
 
       - name: Initialize and Build
         run: |
-          # 1. Настройка путей
+          # 1. Настройка путей в конфиге
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/home/runner/android-sdk\"}" > ~/.bubblewrap/config.json
 
-          # 2. Создаем файл настроек проекта заранее, чтобы не было вопросов
-          npx @bubblewrap/cli init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --directory="./" --accept_no_prompt
+          # 2. Магия: используем команду 'init' с флагом --source, который отключает вопросы
+          npx @bubblewrap/cli init --manifest="https://kirillhappy.github.io/hindi-app/manifest.json" --yes --skipConfig
           
-          # 3. Сборка (теперь без бесконечного 'yes')
-          # Флаг --yes внутри команды обычно достаточно
-          npx @bubblewrap/cli build --skipSigning --yes
+          # 3. Если 'init' всё же капризничает, мы просто заставим его собрать проект 
+          # Мы посылаем Enter на случай, если он всё же что-то спросит
+          echo -e "\n\n\n\n\n\n\n" | npx @bubblewrap/cli build --skipSigning --yes
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
