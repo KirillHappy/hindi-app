@@ -1,0 +1,33 @@
+name: Build Android APK (TWA)
+on:
+  push:
+    branches: [ main ] # Запускать сборку при каждом обновлении кода
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Initialize and Build APK
+        # Мы используем 'yes', чтобы автоматически соглашаться с лицензиями
+        run: |
+          yes | bubblewrap init --manifest=https://твой-сайт.com/manifest.json
+          bubblewrap build
+        # Примечание: Чтобы это сработало идеально, manifest.json должен быть доступен по ссылке.
+        # Если ссылки нет, можно использовать локальный билд (подскажу как, если нужно).
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-apk
+          path: ./*.apk
