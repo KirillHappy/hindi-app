@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎧 ХИНДИ - Упрощенное приложение</title>
+    <title>🎧 ХИНДИ - Улучшенное приложение</title>
     
     <!-- Стили -->
     <style>
@@ -104,6 +104,8 @@
             font-size: 16px;
             line-height: 1.4;
             font-family: 'Georgia', serif;
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         .hindi-word {
@@ -189,34 +191,53 @@
             color: white;
         }
 
-        /* КАРТОЧКИ */
+        /* КАРТОЧКИ - ИСПРАВЛЕННЫЕ */
         .flashcard-container {
-            background: #ff7e5f;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 15px;
-            padding: 30px;
+            padding: 30px 20px;
             margin: 20px 0;
             text-align: center;
-            min-height: 200px;
+            min-height: 250px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
 
         .flashcard-content {
             font-size: 2rem;
             font-weight: 700;
             color: white;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            word-break: break-word;
+            max-width: 100%;
+            padding: 0 10px;
         }
 
         .flashcard-answer {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             color: white;
-            margin-top: 15px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            word-break: break-word;
+            max-width: 100%;
+            padding: 0 15px;
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        /* СЛОВАРЬ */
+        .flashcard-answer.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* СЛОВАРЬ - С КНОПКОЙ ОЗВУЧКИ */
         .dictionary-list {
             max-height: 300px;
             overflow-y: auto;
@@ -229,6 +250,154 @@
             margin: 8px 0;
             border-radius: 8px;
             border-left: 3px solid #6a11cb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dictionary-text {
+            flex: 1;
+        }
+
+        .dictionary-word {
+            font-weight: 600;
+            color: #6a11cb;
+            margin-bottom: 3px;
+        }
+
+        .dictionary-translation {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .dictionary-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .speak-btn {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ СЛОВ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .modal-title {
+            color: #6a11cb;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .modal-input:focus {
+            border-color: #6a11cb;
+            outline: none;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-btn-primary {
+            background: #6a11cb;
+            color: white;
+        }
+
+        .modal-btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        /* ПАНЕЛЬ ВЫБОРА ТЕКСТА */
+        .selection-panel {
+            position: fixed;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 900;
+            display: none;
+            flex-direction: column;
+            min-width: 250px;
+            max-width: 300px;
+            border: 2px solid #6a11cb;
+        }
+
+        .selection-text {
+            padding: 15px;
+            background: #f8f9ff;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            max-height: 100px;
+            overflow-y: auto;
+            word-break: break-word;
+        }
+
+        .selection-buttons {
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .selection-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         /* УВЕДОМЛЕНИЯ */
@@ -279,7 +448,11 @@
             }
 
             .flashcard-content {
-                font-size: 1.5rem;
+                font-size: 1.8rem;
+            }
+
+            .flashcard-answer {
+                font-size: 1.4rem;
             }
         }
 
@@ -307,6 +480,35 @@
     </style>
 </head>
 <body>
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ СЛОВ -->
+    <div id="addWordModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">Добавить в словарь</h3>
+            <textarea id="modalHindiInput" class="modal-input" placeholder="Текст на хинди..." readonly></textarea>
+            <textarea id="modalTranslationInput" class="modal-input" placeholder="Перевод на русском..."></textarea>
+            <div class="modal-buttons">
+                <button id="modalCancelBtn" class="modal-btn modal-btn-secondary">Отмена</button>
+                <button id="modalSaveBtn" class="modal-btn modal-btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПАНЕЛЬ ВЫБОРА ТЕКСТА -->
+    <div id="selectionPanel" class="selection-panel">
+        <div class="selection-text" id="selectedTextPreview"></div>
+        <div class="selection-buttons">
+            <button id="selectionAddBtn" class="selection-btn" style="background: #00b09b; color: white;">
+                📝 Добавить
+            </button>
+            <button id="selectionSpeakBtn" class="selection-btn" style="background: #6a11cb; color: white;">
+                🔊 Озвучить
+            </button>
+            <button id="selectionCloseBtn" class="selection-btn" style="background: #666; color: white;">
+                ✕
+            </button>
+        </div>
+    </div>
+
     <!-- ОСНОВНОЙ КОНТЕНЙЕР -->
     <div id="app" class="app-container">
         <!-- ШАПКА -->
@@ -340,24 +542,31 @@
                     📂 Выбрать файл
                 </label>
                 <input type="file" id="fileInput" accept=".txt,.srt" style="display: none;">
+                
+                <button onclick="loadExampleText()" class="action-btn btn-success" style="max-width: 250px; margin: 10px auto;">
+                    🎬 Пример текста
+                </button>
             </div>
 
             <div id="textDisplay" class="text-display-area">
                 <div style="text-align: center; padding: 50px 15px; color: #888;">
                     <div style="font-size: 36px; margin-bottom: 15px;">📄</div>
                     <h3>Загрузите текст</h3>
-                    <p style="margin-top: 10px; font-size: 14px;">Кликайте на слова для перевода</p>
+                    <p style="margin-top: 10px; font-size: 14px;">
+                        Кликайте на слова для перевода<br>
+                        Выделяйте текст для добавления предложений
+                    </p>
                 </div>
             </div>
 
             <div id="translationPanel" class="translation-panel">
                 <h3 class="translation-title">📝 Перевод</h3>
                 <div id="translationText" class="translation-text">
-                    👈 Нажмите на слово
+                    👈 Нажмите на слово или выделите текст
                 </div>
                 
                 <div class="action-buttons">
-                    <button onclick="speakCurrentWord()" class="action-btn btn-primary">
+                    <button onclick="speakSelected()" class="action-btn btn-primary">
                         🔊 Озвучить
                     </button>
                     <button onclick="addToDictionary()" class="action-btn btn-success">
@@ -374,7 +583,7 @@
         <div id="dictionary" class="tab-content">
             <h3 style="color: #6a11cb; margin-bottom: 15px;">📚 Мой словарь</h3>
             <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-                Всего слов: <span id="totalWordsStat">0</span>
+                Всего слов/предложений: <span id="totalWordsStat">0</span>
             </p>
 
             <div id="dictionaryList" class="dictionary-list">
@@ -385,7 +594,7 @@
                 <button onclick="exportDictionary()" class="action-btn btn-success">
                     💾 Сохранить
                 </button>
-                <button onclick="addCustomWord()" class="action-btn btn-primary">
+                <button onclick="showAddWordModal()" class="action-btn btn-primary">
                     ✏️ Добавить
                 </button>
                 <button onclick="clearAllWords()" class="action-btn btn-warning">
@@ -397,13 +606,18 @@
         <!-- ВКЛАДКА 3: ПОВТОРЕНИЕ -->
         <div id="repeat" class="tab-content">
             <h3 style="color: #6a11cb; margin-bottom: 15px;">🔄 Повторение слов</h3>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                <button onclick="speakCurrentCard()" class="action-btn" style="background: #6a11cb; color: white; padding: 8px 12px; font-size: 13px;">
+                    🔊 Озвучить текущее
+                </button>
+            </p>
 
             <div id="flashcard" class="flashcard-container" onclick="toggleCardAnswer()">
                 <div id="cardContent" class="flashcard-content">
-                    Нажмите "Начать"
+                    Нажмите "Начать повторение"
                 </div>
                 <div id="cardAnswer" class="flashcard-answer">
-                    <!-- Перевод -->
+                    <!-- Перевод будет здесь -->
                 </div>
             </div>
 
@@ -412,7 +626,7 @@
                     ▶️ Начать
                 </button>
                 <button onclick="toggleCardAnswer()" class="action-btn btn-primary">
-                    📖 Ответ
+                    📖 Показать перевод
                 </button>
                 <button onclick="rateCard('easy')" class="action-btn" style="background: #00c853; color: white;">
                     😊 Легко
@@ -426,6 +640,7 @@
         <!-- ФУТЕР -->
         <footer style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #f0f0f0; color: #666; font-size: 0.9rem;">
             <p>✨ Учим хинди с удовольствием ✨</p>
+            <p style="font-size: 0.8rem; margin-top: 5px;">Выделяйте текст → Добавляйте предложения</p>
         </footer>
     </div>
 
@@ -434,9 +649,12 @@
         // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
         let myDictionary = {};
         let selectedWord = "";
+        let selectedText = "";
         let currentText = "";
         let reviewCards = [];
         let currentCardIndex = 0;
+        let selectionPanelVisible = false;
+        let isAddingPhrase = false;
 
         // Базовый словарь
         const baseDictionary = {
@@ -474,8 +692,19 @@
         function initializeApp() {
             initTabs();
             initFileUpload();
+            initSelectionSystem();
+            initModal();
             loadUserDictionary();
             updateDictionaryView();
+            
+            // Восстанавливаем модальное окно если оно было открыто
+            const savedModalState = localStorage.getItem('hindiModalState');
+            if (savedModalState) {
+                const state = JSON.parse(savedModalState);
+                if (state.visible && state.hindiText) {
+                    showAddWordModalWithText(state.hindiText, state.translation || '');
+                }
+            }
             
             showNotification('✨ Приложение готово!');
         }
@@ -496,7 +725,166 @@
             });
         }
 
-        // ==================== ЗАГРУЗКА ФАЙЛОВ (УПРОЩЕННАЯ) ====================
+        // ==================== СИСТЕМА ВЫБОРА ТЕКСТА ====================
+        function initSelectionSystem() {
+            const textDisplay = document.getElementById('textDisplay');
+            const selectionPanel = document.getElementById('selectionPanel');
+            
+            // Обработка выделения текста
+            textDisplay.addEventListener('mouseup', handleTextSelection);
+            textDisplay.addEventListener('touchend', handleTextSelection);
+            
+            // Кнопки панели выбора
+            document.getElementById('selectionAddBtn').addEventListener('click', function() {
+                const text = document.getElementById('selectedTextPreview').textContent;
+                if (text.trim()) {
+                    showAddWordModalWithText(text.trim());
+                    hideSelectionPanel();
+                }
+            });
+            
+            document.getElementById('selectionSpeakBtn').addEventListener('click', function() {
+                const text = document.getElementById('selectedTextPreview').textContent;
+                if (text.trim()) {
+                    speakText(text.trim());
+                }
+            });
+            
+            document.getElementById('selectionCloseBtn').addEventListener('click', hideSelectionPanel);
+            
+            // Скрываем панель при клике вне её
+            document.addEventListener('click', function(event) {
+                if (selectionPanelVisible && !selectionPanel.contains(event.target) && 
+                    event.target.id !== 'textDisplay' && !event.target.closest('#textDisplay')) {
+                    hideSelectionPanel();
+                }
+            });
+        }
+
+        function handleTextSelection(event) {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            if (selectedText && selectedText.length > 0) {
+                // Показываем панель выбора
+                showSelectionPanel(selectedText, event);
+            }
+        }
+
+        function showSelectionPanel(text, event) {
+            const panel = document.getElementById('selectionPanel');
+            const preview = document.getElementById('selectedTextPreview');
+            
+            preview.textContent = text;
+            selectedText = text;
+            
+            // Позиционируем панель
+            let x = event.clientX || (event.changedTouches && event.changedTouches[0].clientX) || window.innerWidth / 2;
+            let y = event.clientY || (event.changedTouches && event.changedTouches[0].clientY) || window.innerHeight / 2;
+            
+            // Корректируем позицию
+            const panelWidth = 300;
+            const panelHeight = 150;
+            
+            if (x + panelWidth > window.innerWidth) x = window.innerWidth - panelWidth - 10;
+            if (y + panelHeight > window.innerHeight) y = window.innerHeight - panelHeight - 10;
+            
+            panel.style.left = x + 'px';
+            panel.style.top = y + 'px';
+            panel.style.display = 'flex';
+            selectionPanelVisible = true;
+        }
+
+        function hideSelectionPanel() {
+            document.getElementById('selectionPanel').style.display = 'none';
+            selectionPanelVisible = false;
+            window.getSelection().removeAllRanges();
+        }
+
+        // ==================== МОДАЛЬНОЕ ОКНО ====================
+        function initModal() {
+            const modal = document.getElementById('addWordModal');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            const saveBtn = document.getElementById('modalSaveBtn');
+            
+            // Сохраняем состояние модального окна при закрытии
+            window.addEventListener('beforeunload', function() {
+                if (modal.style.display === 'flex') {
+                    const state = {
+                        visible: true,
+                        hindiText: document.getElementById('modalHindiInput').value,
+                        translation: document.getElementById('modalTranslationInput').value
+                    };
+                    localStorage.setItem('hindiModalState', JSON.stringify(state));
+                } else {
+                    localStorage.removeItem('hindiModalState');
+                }
+            });
+            
+            // Кнопка отмены
+            cancelBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                localStorage.removeItem('hindiModalState');
+            });
+            
+            // Кнопка сохранения
+            saveBtn.addEventListener('click', function() {
+                const hindiText = document.getElementById('modalHindiInput').value.trim();
+                const translation = document.getElementById('modalTranslationInput').value.trim();
+                
+                if (!hindiText) {
+                    showNotification('⚠️ Введите текст на хинди');
+                    return;
+                }
+                
+                if (!translation) {
+                    showNotification('⚠️ Введите перевод');
+                    return;
+                }
+                
+                // Добавляем в словарь
+                myDictionary[hindiText] = translation;
+                saveUserDictionary();
+                updateDictionaryView();
+                
+                modal.style.display = 'none';
+                localStorage.removeItem('hindiModalState');
+                
+                showNotification(`✅ "${hindiText.length > 20 ? hindiText.substring(0, 20) + '...' : hindiText}" добавлено`);
+            });
+            
+            // Закрытие по клику на оверлей
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                    localStorage.removeItem('hindiModalState');
+                }
+            });
+        }
+
+        function showAddWordModal() {
+            document.getElementById('modalTitle').textContent = 'Добавить в словарь';
+            document.getElementById('modalHindiInput').value = '';
+            document.getElementById('modalHindiInput').readOnly = false;
+            document.getElementById('modalHindiInput').placeholder = 'Текст на хинди...';
+            document.getElementById('modalTranslationInput').value = '';
+            document.getElementById('addWordModal').style.display = 'flex';
+        }
+
+        function showAddWordModalWithText(hindiText, translation = '') {
+            document.getElementById('modalTitle').textContent = 'Добавить в словарь';
+            document.getElementById('modalHindiInput').value = hindiText;
+            document.getElementById('modalHindiInput').readOnly = true;
+            document.getElementById('modalTranslationInput').value = translation;
+            document.getElementById('addWordModal').style.display = 'flex';
+            
+            // Автофокус на поле перевода
+            setTimeout(() => {
+                document.getElementById('modalTranslationInput').focus();
+            }, 100);
+        }
+
+        // ==================== ЗАГРУЗКА ФАЙЛОВ ====================
         function initFileUpload() {
             document.getElementById('fileInput').addEventListener('change', function(event) {
                 const file = event.target.files[0];
@@ -520,18 +908,18 @@
             });
         }
 
-        // ==================== ОТОБРАЖЕНИЕ ТЕКСТА (САМАЯ ПРОСТАЯ ВЕРСИЯ) ====================
+        // ==================== ОТОБРАЖЕНИЕ ТЕКСТА ====================
         function displayTextSimple(text) {
             const textDisplay = document.getElementById('textDisplay');
             textDisplay.innerHTML = '';
             
-            // 1. ОГРАНИЧИВАЕМ текст
+            // ОГРАНИЧИВАЕМ текст
             if (text.length > 30000) {
                 text = text.substring(0, 30000);
                 showNotification('📝 Текст обрезан до 30К символов');
             }
             
-            // 2. Парсим SRT
+            // Парсим SRT
             if (text.includes('-->')) {
                 text = text.split('\n')
                     .filter(line => {
@@ -541,17 +929,16 @@
                     .join(' ');
             }
             
-            // 3. Сохраняем
+            // Сохраняем
             currentText = text;
             
-            // 4. Отображаем ПРОСТО
+            // Отображаем
             const words = text.split(/(\s+)/);
             let currentLine = document.createElement('div');
             currentLine.style.marginBottom = '8px';
             
             words.forEach(word => {
                 if (word.trim().length === 0) {
-                    // Пробелы
                     currentLine.appendChild(document.createTextNode(' '));
                     return;
                 }
@@ -563,7 +950,9 @@
                 span.textContent = word;
                 span.dataset.word = cleanWord;
                 
-                span.onclick = function() {
+                span.onclick = function(e) {
+                    e.stopPropagation();
+                    
                     // Снимаем выделение
                     document.querySelectorAll('.hindi-word.selected').forEach(w => {
                         w.classList.remove('selected');
@@ -574,11 +963,7 @@
                     selectedWord = cleanWord;
                     
                     // Показываем перевод
-                    let translation = myDictionary[cleanWord] || baseDictionary[cleanWord];
-                    document.getElementById('translationText').innerHTML = `
-                        <div style="font-size: 1.2rem;">${cleanWord}</div>
-                        <div style="font-size: 1.6rem; margin-top: 5px;">${translation || '❌ Не знаю'}</div>
-                    `;
+                    showWordTranslation(cleanWord);
                 };
                 
                 currentLine.appendChild(span);
@@ -598,6 +983,20 @@
                 <div style="font-size: 1.2rem;">${word}</div>
                 <div style="font-size: 1.6rem; margin-top: 5px;">${translation || '❌ Не знаю'}</div>
             `;
+        }
+
+        function addToDictionary() {
+            if (selectedText) {
+                // Если есть выделенный текст, добавляем его
+                showAddWordModalWithText(selectedText);
+                selectedText = '';
+            } else if (selectedWord) {
+                // Иначе добавляем выбранное слово
+                const translation = myDictionary[selectedWord] || baseDictionary[selectedWord] || '';
+                showAddWordModalWithText(selectedWord, translation);
+            } else {
+                showNotification('⚠️ Выберите слово или выделите текст');
+            }
         }
 
         // ==================== СЛОВАРЬ ====================
@@ -632,41 +1031,27 @@
             words.forEach(word => {
                 const item = document.createElement('div');
                 item.className = 'dictionary-item';
+                
+                const isLongText = word.length > 30 || myDictionary[word].length > 30;
+                
                 item.innerHTML = `
-                    <div style="font-weight: 600; color: #6a11cb;">${word}</div>
-                    <div style="color: #666; margin-top: 3px;">${myDictionary[word]}</div>
+                    <div class="dictionary-text">
+                        <div class="dictionary-word" style="font-size: ${isLongText ? '0.9rem' : '1rem'}">
+                            ${word}
+                        </div>
+                        <div class="dictionary-translation" style="font-size: ${isLongText ? '0.85rem' : '0.95rem'}">
+                            ${myDictionary[word]}
+                        </div>
+                    </div>
+                    <div class="dictionary-actions">
+                        <button onclick="speakText('${word.replace(/'/g, "\\'")}')" class="speak-btn">
+                            🔊
+                        </button>
+                    </div>
                 `;
+                
                 list.appendChild(item);
             });
-        }
-
-        function addToDictionary() {
-            if (!selectedWord) {
-                showNotification('⚠️ Выберите слово');
-                return;
-            }
-            
-            const translation = prompt(`Перевод слова "${selectedWord}":`, myDictionary[selectedWord] || baseDictionary[selectedWord] || '');
-            
-            if (translation && translation.trim()) {
-                myDictionary[selectedWord] = translation.trim();
-                saveUserDictionary();
-                updateDictionaryView();
-                showNotification(`✅ "${selectedWord}" добавлено`);
-            }
-        }
-
-        function addCustomWord() {
-            const word = prompt('Слово на хинди:');
-            if (!word) return;
-            
-            const translation = prompt(`Перевод для "${word}":`);
-            if (!translation) return;
-            
-            myDictionary[word] = translation;
-            saveUserDictionary();
-            updateDictionaryView();
-            showNotification('✅ Слово добавлено');
         }
 
         function exportDictionary() {
@@ -689,7 +1074,7 @@
             }
         }
 
-        // ==================== ПОВТОРЕНИЕ ====================
+        // ==================== КАРТОЧКИ ПОВТОРЕНИЯ (ИСПРАВЛЕННЫЕ) ====================
         function startReview() {
             const words = Object.keys(myDictionary);
             if (words.length === 0) {
@@ -697,58 +1082,121 @@
                 return;
             }
             
-            reviewCards = words.map(word => ({ word, translation: myDictionary[word] }));
+            reviewCards = words.map(word => ({ 
+                word: word, 
+                translation: myDictionary[word] 
+            }));
+            
+            // Перемешиваем карточки
+            for (let i = reviewCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [reviewCards[i], reviewCards[j]] = [reviewCards[j], reviewCards[i]];
+            }
+            
             currentCardIndex = 0;
             showCard();
         }
 
         function showCard() {
             if (currentCardIndex >= reviewCards.length) {
-                document.getElementById('cardContent').textContent = '🎉 Готово!';
-                document.getElementById('cardAnswer').style.display = 'none';
+                document.getElementById('cardContent').textContent = '🎉 Все карточки пройдены!';
+                document.getElementById('cardAnswer').textContent = '';
+                document.getElementById('cardAnswer').classList.remove('show');
                 return;
             }
             
             const card = reviewCards[currentCardIndex];
             document.getElementById('cardContent').textContent = card.word;
             document.getElementById('cardAnswer').textContent = card.translation;
-            document.getElementById('cardAnswer').style.display = 'none';
+            document.getElementById('cardAnswer').classList.remove('show');
+            
+            // Адаптивный размер шрифта для длинного текста
+            const isLongText = card.word.length > 30 || card.translation.length > 30;
+            document.getElementById('cardContent').style.fontSize = isLongText ? '1.5rem' : '2rem';
+            document.getElementById('cardAnswer').style.fontSize = isLongText ? '1.3rem' : '1.6rem';
         }
 
         function toggleCardAnswer() {
             const answer = document.getElementById('cardAnswer');
-            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+            answer.classList.toggle('show');
         }
 
         function rateCard(difficulty) {
+            if (currentCardIndex >= reviewCards.length) return;
+            
             currentCardIndex++;
             showCard();
             showNotification(difficulty === 'easy' ? '✅ Легко' : '⚠️ Сложно');
+            
+            // Автосохранение прогресса
+            saveAppState();
+        }
+
+        function speakCurrentCard() {
+            if (currentCardIndex < reviewCards.length) {
+                const card = reviewCards[currentCardIndex];
+                speakText(card.word);
+            }
         }
 
         // ==================== ОЗВУЧКА ====================
-        function speakCurrentWord() {
-            if (!selectedWord) {
-                showNotification('⚠️ Выберите слово');
+        function speakText(text) {
+            if (!text) {
+                showNotification('⚠️ Нечего озвучивать');
                 return;
             }
             
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(selectedWord);
+                const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'hi-IN';
                 utterance.rate = 0.8;
+                utterance.volume = 1;
+                
+                // Пытаемся найти голос хинди
+                const voices = speechSynthesis.getVoices();
+                const hindiVoice = voices.find(voice => 
+                    voice.lang.includes('hi') || 
+                    voice.name.toLowerCase().includes('hindi')
+                );
+                
+                if (hindiVoice) {
+                    utterance.voice = hindiVoice;
+                }
+                
+                utterance.onstart = function() {
+                    console.log('Начало озвучки:', text);
+                };
+                
+                utterance.onerror = function(event) {
+                    console.error('Ошибка озвучки:', event);
+                    showNotification('⚠️ Ошибка озвучки');
+                };
+                
                 speechSynthesis.speak(utterance);
+            } else {
+                showNotification('⚠️ Браузер не поддерживает озвучку');
+            }
+        }
+
+        function speakSelected() {
+            if (selectedText) {
+                speakText(selectedText);
+            } else if (selectedWord) {
+                speakText(selectedWord);
+            } else {
+                showNotification('⚠️ Выберите слово или выделите текст');
             }
         }
 
         // ==================== GOOGLE ПЕРЕВОДЧИК ====================
         function lookupInGoogle() {
-            if (!selectedWord) {
-                showNotification('⚠️ Выберите слово');
+            const text = selectedText || selectedWord;
+            if (!text) {
+                showNotification('⚠️ Выберите слово или выделите текст');
                 return;
             }
             
-            const url = `https://translate.google.com/?sl=hi&tl=ru&text=${encodeURIComponent(selectedWord)}`;
+            const url = `https://translate.google.com/?sl=hi&tl=ru&text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
 
@@ -756,23 +1204,11 @@
         function saveAppState() {
             const state = {
                 dictionary: myDictionary,
+                currentCardIndex: currentCardIndex,
+                reviewCards: reviewCards,
                 lastSave: new Date().toISOString()
             };
             localStorage.setItem('hindiAppState', JSON.stringify(state));
-        }
-
-        // ==================== УТИЛИТЫ ====================
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 3000);
         }
 
         // ==================== ПРИМЕР ТЕКСТА ====================
@@ -785,6 +1221,23 @@
             displayTextSimple(example);
             showNotification('📝 Пример загружен');
         };
+
+        // ==================== УТИЛИТЫ ====================
+        function showNotification(message) {
+            // Удаляем старые уведомления
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
     </script>
 </body>
 </html>
