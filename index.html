@@ -1597,112 +1597,170 @@
             });
         }
 
-        function displayText(text) {
-            const textDisplay = document.getElementById('textDisplay');
-            textDisplay.innerHTML = '';
-            
-            // Парсим SRT формат, если это субтитры
-            if (text.includes('-->')) {
-                text = parseSRT(text);
+        // ==================== ЗАГРУЗКА И ОТОБРАЖЕНИЕ ТЕКСТА ====================
+let isProcessingText = false;
+let processedText = "";
+
+function displayText(text) {
+    if (isProcessingText) {
+        showNotification("⚠️ Подождите, идёт обработка предыдущего текста...");
+        return;
+    }
+    
+    isProcessingText = true;
+    currentText = text;
+    const textDisplay = document.getElementById('textDisplay');
+    
+    // Показываем индикатор загрузки
+    textDisplay.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #666;">
+            <div class="spinner"></div>
+            <h3 style="margin-top: 20px;">Обрабатываю текст...</h3>
+            <p style="margin-top: 10px;">Это может занять несколько секунд</p>
+            <div id="progressInfo" style="margin-top: 20px; font-size: 14px;">
+                Обработано: <span id="processedCount">0</span> слов
+            </div>
+        </div>
+    `;
+    
+    // Обрабатываем текст асинхронно, чтобы не блокировать интерфейс
+    setTimeout(() => {
+        processTextInChunks(text, textDisplay);
+    }, 50);
+}
+
+function processTextInChunks(text, textDisplay) {
+    // Парсим SRT формат, если это субтитры
+    if (text.includes('-->')) {
+        text = parseSRT(text);
+    }
+    
+    // Ограничиваем максимальный размер текста
+    if (text.length > 100000) { // около 100KB
+        text = text.substring(0, 100000);
+        showNotification("⚠️ Текст слишком большой. Обрезано до 100 000 символов.");
+    }
+    
+    // Разбиваем текст на предложения
+    const sentences = text.split(/[।.!?]+/);
+    let sentenceCount = 0;
+    let wordCount = 0;
+    const maxWordsPerChunk = 50; // Обрабатываем по 50 слов за раз
+    let currentChunk = [];
+    let allWords = [];
+    
+    // Собираем все слова
+    sentences.forEach(sentence => {
+        const trimmedSentence = sentence.trim();
+        if (trimmedSentence.length > 2) {
+            const words = trimmedSentence.split(/\s+/);
+            allWords = allWords.concat(words.map(word => ({
+                word: word,
+                cleanWord: word.replace(/[.,;:!?"'()\[\]{}«»]/g, ''),
+                sentence: trimmedSentence
+            })));
+        }
+    });
+    
+    // Если нет предложений, просто разбиваем на слова
+    if (allWords.length === 0) {
+        const words = text.split(/\s+/);
+        allWords = words.map(word => ({
+            word: word,
+            cleanWord: word.replace(/[.,;:!?"'()\[\]{}]/g, ''),
+            sentence: word
+        }));
+    }
+    
+    // Функция обработки порции слов
+    function processChunk(startIndex) {
+        const endIndex = Math.min(startIndex + maxWordsPerChunk, allWords.length);
+        const chunk = allWords.slice(startIndex, endIndex);
+        
+        const chunkHTML = chunk.map(item => {
+            if (item.cleanWord.length > 0) {
+                return `<span class="hindi-word" data-word="${item.cleanWord}">${item.word} </span>`;
             }
+            return item.word + ' ';
+        }).join('');
+        
+        // Добавляем порцию текста
+        if (startIndex === 0) {
+            textDisplay.innerHTML = `<div class="text-content">${chunkHTML}</div>`;
+        } else {
+            textDisplay.querySelector('.text-content').innerHTML += chunkHTML;
+        }
+        
+        // Обновляем прогресс
+        document.getElementById('processedCount').textContent = endIndex;
+        
+        // Если есть еще слова, планируем следующую порцию
+        if (endIndex < allWords.length) {
+            setTimeout(() => processChunk(endIndex), 10); // 10ms задержка между порциями
+        } else {
+            // Завершили обработку
+            isProcessingText = false;
             
-            // Разбиваем текст на предложения
-            const sentences = text.split(/[।.!?]+/);
-            let sentenceCount = 0;
-            
-            sentences.forEach((sentence, index) => {
-                const trimmedSentence = sentence.trim();
-                if (trimmedSentence.length > 2) {
-                    sentenceCount++;
+            // Добавляем обработчики событий ко всем словам
+            setTimeout(() => {
+                const wordElements = textDisplay.querySelectorAll('.hindi-word');
+                wordElements.forEach(wordSpan => {
+                    const word = wordSpan.dataset.word;
                     
-                    const sentenceDiv = document.createElement('div');
-                    sentenceDiv.className = 'sentence';
-                    sentenceDiv.style.marginBottom = '25px';
-                    sentenceDiv.style.padding = '15px';
-                    sentenceDiv.style.background = sentenceCount % 2 === 0 ? '#f9f9ff' : '#fff';
-                    sentenceDiv.style.borderRadius = '10px';
-                    sentenceDiv.style.borderLeft = '4px solid #6a11cb';
-                    
-                    // Номер предложения (опционально)
-                    const numberSpan = document.createElement('span');
-                    numberSpan.textContent = sentenceCount + '. ';
-                    numberSpan.style.color = '#6a11cb';
-                    numberSpan.style.fontWeight = 'bold';
-                    numberSpan.style.marginRight = '8px';
-                    sentenceDiv.appendChild(numberSpan);
-                    
-                    // Разбиваем предложение на слова
-                    const words = trimmedSentence.split(/\s+/);
-                    words.forEach(word => {
-                        // Очищаем слово от знаков препинания
-                        const cleanWord = word.replace(/[.,;:!?"'()\[\]{}«»]/g, '');
-                        
-                        if (cleanWord.length > 0) {
-                            const wordSpan = document.createElement('span');
-                            wordSpan.className = 'hindi-word';
-                            wordSpan.textContent = word + ' ';
-                            wordSpan.dataset.word = cleanWord;
-                            
-                            // Клик по слову
-                            wordSpan.addEventListener('click', function() {
-                                selectWord(cleanWord, wordSpan);
-                            });
-                            
-                            // Двойной клик по предложению
-                            wordSpan.addEventListener('dblclick', function() {
-                                selectSentence(trimmedSentence);
-                            });
-                            
-                            sentenceDiv.appendChild(wordSpan);
-                        }
+                    // Клик по слову
+                    wordSpan.addEventListener('click', function() {
+                        selectWord(word, wordSpan);
                     });
                     
-                    textDisplay.appendChild(sentenceDiv);
-                }
-            });
-            
-            // Если текст короткий или не содержит предложений
-            if (sentenceCount === 0) {
-                // Просто показываем как есть с разбивкой на слова
-                const words = text.split(/\s+/);
-                words.forEach(word => {
-                    const cleanWord = word.replace(/[.,;:!?"'()\[\]{}]/g, '');
-                    
-                    if (cleanWord.length > 0) {
-                        const wordSpan = document.createElement('span');
-                        wordSpan.className = 'hindi-word';
-                        wordSpan.textContent = word + ' ';
-                        wordSpan.dataset.word = cleanWord;
-                        
-                        wordSpan.addEventListener('click', function() {
-                            selectWord(cleanWord, wordSpan);
-                        });
-                        
-                        textDisplay.appendChild(wordSpan);
-                    }
+                    // Двойной клик по предложению
+                    wordSpan.addEventListener('dblclick', function() {
+                        // Находим предложение, содержащее это слово
+                        const sentence = allWords.find(w => w.cleanWord === word)?.sentence || word;
+                        selectSentence(sentence);
+                    });
                 });
-            }
-            
-            // Включаем выделение текста
-            textDisplay.style.userSelect = 'text';
-            textDisplay.style.webkitUserSelect = 'text';
+                
+                showNotification(`✅ Текст обработан: ${allWords.length} слов`);
+                
+                // Сохраняем состояние
+                saveAppState();
+                
+                // Обновляем прогресс-бар
+                updateProgressBar();
+                
+            }, 100);
         }
+    }
+    
+    // Начинаем обработку с первой порции
+    processChunk(0);
+}
 
-        function parseSRT(srtText) {
-            // Убираем номера строк, таймкоды и пустые строки
-            return srtText
-                .split('\n')
-                .filter(line => {
-                    const trimmed = line.trim();
-                    return trimmed && 
-                           !/^\d+$/.test(trimmed) && 
-                           !trimmed.includes('-->') &&
-                           !trimmed.includes('WEBVTT') &&
-                           !trimmed.includes('Kind:');
-                })
-                .map(line => line.replace(/<\/?[^>]+(>|$)/g, '')) // Убираем HTML теги
-                .join(' ');
-        }
+// Улучшенная функция parseSRT
+function parseSRT(srtText) {
+    try {
+        return srtText
+            .split('\n')
+            .filter(line => {
+                const trimmed = line.trim();
+                return trimmed && 
+                       !/^\d+$/.test(trimmed) && 
+                       !trimmed.includes('-->') &&
+                       !trimmed.includes('WEBVTT') &&
+                       !trimmed.includes('Kind:') &&
+                       !trimmed.startsWith('NOTE') &&
+                       !trimmed.startsWith('STYLE');
+            })
+            .map(line => line.replace(/<\/?[^>]+(>|$)/g, '')) // Убираем HTML теги
+            .map(line => line.replace(/\{\\an\d+\}/g, '')) // Убираем позиционирование
+            .join(' ')
+            .replace(/\s+/g, ' ') // Убираем лишние пробелы
+            .trim();
+    } catch (error) {
+        console.error('Ошибка парсинга SRT:', error);
+        return srtText;
+    }
+}
 
         // ==================== ВЫБОР СЛОВ И ПРЕДЛОЖЕНИЙ ====================
         function selectWord(word, element) {
