@@ -682,8 +682,8 @@
                 <button onclick="importDictionary()" class="action-btn btn-primary">
                     <span>📂</span> Загрузить словарь
                 </button>
-                <button onclick="addCustomWord()" class="action-btn btn-info">
-                    <span>✏️</span> Добавить слово
+                <button onclick="addCustomPhrase()" class="action-btn btn-info">
+                    <span>✏️</span> Добавить свой текст
                 </button>
                 <button onclick="clearAllWords()" class="action-btn btn-warning">
                     <span>🗑️</span> Очистить все
@@ -834,7 +834,7 @@
                 <ol style="margin-left: 20px; line-height: 2;">
                     <li>Найдите видео на хинди на YouTube</li>
                     <li>Включите субтитры (кнопка "СС" в правом нижнем углу)</li>
-                    <li>Нажмите на три точки (⋮) рядом с кнопкой "СС"</li>
+                    <li>Нажмите на три точки (⋮) рядом с кнопка "СС"</li>
                     <li>Выберите <strong>"Открыть транскрипт"</strong></li>
                     <li>Скопируйте весь текст</li>
                     <li>Вставьте в текстовый файл и сохраните как <code>.txt</code></li>
@@ -884,6 +884,14 @@
         let currentCardIndex = 0;
         let isAnswerShown = false;
         let sessionStats = { total: 0, easy: 0, hard: 0, skipped: 0 };
+        
+        // Переменные для автосохранения
+        let appState = {
+            currentText: "",
+            scrollPosition: 0,
+            dictionary: {},
+            lastOpenedFile: ""
+        };
 
         // ==================== БАЗОВЫЙ СЛОВАРЬ ХИНДИ-РУССКИЙ (300+ СЛОВ) ====================
         const baseDictionary = {
@@ -1198,7 +1206,7 @@
             // Показываем загрузчик
             document.getElementById('loader').style.display = 'block';
             
-            // Имитируем загрузку (можно убрать setTimeout в финальной версии)
+            // Имитируем загрузку
             setTimeout(function() {
                 // Инициализация
                 initializeApp();
@@ -1223,11 +1231,14 @@
             // Инициализация загрузки файлов
             initFileUpload();
             
-            // Загрузка пользовательского словаря
-            loadUserDictionary();
+            // Загрузка пользовательского словаря и состояния приложения
+            loadAppState();
             
             // Загрузка статистики
             loadStatistics();
+            
+            // Инициализация системы выделения текста
+            initTextSelection();
             
             // Обновление интерфейса
             updateDictionaryView();
@@ -1272,6 +1283,291 @@
             });
         }
 
+        // ==================== СИСТЕМА ВЫДЕЛЕНИЯ ТЕКСТА ====================
+        let selectionPanel = null;
+        let selectedTextRange = null;
+
+        function initTextSelection() {
+            // Создаем панель для работы с выделенным текстом
+            selectionPanel = document.createElement('div');
+            selectionPanel.id = 'selectionPanel';
+            selectionPanel.style.cssText = `
+                position: fixed;
+                background: linear-gradient(135deg, #00b09b, #96c93d);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                z-index: 10001;
+                display: none;
+                flex-direction: column;
+                gap: 10px;
+                min-width: 250px;
+                max-width: 300px;
+                animation: fadeIn 0.2s;
+            `;
+            
+            selectionPanel.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 5px;">✏️ Выделенный текст:</div>
+                <div id="selectedTextPreview" style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; font-size: 14px; max-height: 100px; overflow-y: auto;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button id="addSelectionBtn" style="flex: 1; background: white; color: #00b09b; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        ✅ Добавить в словарь
+                    </button>
+                    <button id="speakSelectionBtn" style="background: #6a11cb; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        🔊 Озвучить
+                    </button>
+                </div>
+                <div style="text-align: right; margin-top: 5px;">
+                    <button id="closeSelectionBtn" style="background: transparent; color: white; border: none; cursor: pointer; font-size: 12px;">
+                        ✕ Закрыть
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(selectionPanel);
+            
+            // Обработчики событий для кнопок панели
+            document.getElementById('addSelectionBtn').addEventListener('click', addSelectedTextToDictionary);
+            document.getElementById('speakSelectionBtn').addEventListener('click', speakSelectedText);
+            document.getElementById('closeSelectionBtn').addEventListener('click', hideSelectionPanel);
+            
+            // Обработчик выделения текста
+            document.addEventListener('mouseup', handleTextSelection);
+            document.addEventListener('touchend', handleTextSelection);
+            
+            // Скрываем панель при клике вне её
+            document.addEventListener('click', function(event) {
+                if (selectionPanel.style.display === 'flex' && 
+                    !selectionPanel.contains(event.target) &&
+                    !isTextSelectionEvent(event)) {
+                    hideSelectionPanel();
+                }
+            });
+        }
+
+        function handleTextSelection(event) {
+            // Убираем предыдущее выделение
+            clearTextSelection();
+            
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            if (selectedText.length > 0 && selectedText.length < 1000) {
+                // Сохраняем выделение
+                selectedTextRange = selection.getRangeAt(0).cloneRange();
+                
+                // Показываем панель
+                showSelectionPanel(selectedText, event);
+            }
+        }
+
+        function showSelectionPanel(text, event) {
+            const preview = document.getElementById('selectedTextPreview');
+            preview.textContent = text.length > 100 ? text.substring(0, 100) + '...' : text;
+            
+            // Позиционируем панель
+            let x = event.clientX || (event.touches && event.touches[0].clientX) || window.innerWidth / 2;
+            let y = event.clientY || (event.touches && event.touches[0].clientY) || window.innerHeight / 2;
+            
+            // Корректируем позицию, чтобы панель не выходила за пределы экрана
+            const panelWidth = 300;
+            const panelHeight = 200;
+            
+            if (x + panelWidth > window.innerWidth) {
+                x = window.innerWidth - panelWidth - 20;
+            }
+            
+            if (y + panelHeight > window.innerHeight) {
+                y = window.innerHeight - panelHeight - 20;
+            }
+            
+            selectionPanel.style.left = x + 'px';
+            selectionPanel.style.top = (y - 10) + 'px';
+            selectionPanel.style.display = 'flex';
+            
+            // Подсвечиваем выделенный текст
+            highlightSelectedText();
+        }
+
+        function hideSelectionPanel() {
+            selectionPanel.style.display = 'none';
+            clearTextSelection();
+        }
+
+        function highlightSelectedText() {
+            if (!selectedTextRange) return;
+            
+            const span = document.createElement('span');
+            span.style.cssText = `
+                background: linear-gradient(135deg, #fff9c4, #ffeb3b);
+                padding: 2px 4px;
+                border-radius: 4px;
+                border: 2px solid #ffc107;
+                transition: all 0.3s;
+            `;
+            
+            try {
+                selectedTextRange.surroundContents(span);
+            } catch(e) {
+                // Если нельзя обернуть выделение (например, пересекает границы элементов)
+                console.log('Не удалось подсветить выделение');
+            }
+        }
+
+        function clearTextSelection() {
+            // Убираем подсветку
+            const highlighted = document.querySelectorAll('#textDisplay span[style*="background: linear-gradient"]');
+            highlighted.forEach(el => {
+                const parent = el.parentNode;
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                parent.removeChild(el);
+            });
+            
+            selectedTextRange = null;
+            window.getSelection().removeAllRanges();
+        }
+
+        function isTextSelectionEvent(event) {
+            // Проверяем, произошел ли клик внутри области текста
+            return event.target.closest('#textDisplay') !== null;
+        }
+
+        function addSelectedTextToDictionary() {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            if (!selectedText) {
+                showNotification('⚠️ Не выделен текст!');
+                return;
+            }
+            
+            addCustomPhraseWithText(selectedText);
+            hideSelectionPanel();
+        }
+
+        function speakSelectedText() {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            if (!selectedText) {
+                showNotification('⚠️ Не выделен текст!');
+                return;
+            }
+            
+            speakText(selectedText);
+        }
+
+        function addCustomPhraseWithText(text) {
+            const translation = prompt(`Добавить фразу в словарь:\n\nХинди: "${text}"\n\nВведите перевод на русском:`);
+            
+            if (translation && translation.trim()) {
+                // Добавляем фразу в словарь
+                myDictionary[text] = translation.trim();
+                saveUserDictionary();
+                saveAppState();
+                
+                showNotification(`✅ Фраза добавлена в словарь!`);
+                updateDictionaryView();
+                updateStatistics();
+            }
+        }
+
+        function addCustomPhrase() {
+            const hindiText = prompt('Введите текст на хинди (слово, фразу или предложение):');
+            if (!hindiText || !hindiText.trim()) return;
+            
+            const translation = prompt(`Введите перевод для:\n"${hindiText}"`);
+            if (!translation || !translation.trim()) return;
+            
+            addCustomPhraseWithText(hindiText.trim());
+        }
+
+        // ==================== АВТОСОХРАНЕНИЕ СОСТОЯНИЯ ====================
+        function saveAppState() {
+            try {
+                appState = {
+                    currentText: currentText,
+                    scrollPosition: document.getElementById('textDisplay').scrollTop || 0,
+                    dictionary: myDictionary,
+                    lastOpenedFile: document.getElementById('fileInput')?.files[0]?.name || '',
+                    lastOpened: new Date().toISOString()
+                };
+                
+                localStorage.setItem('hindiAppState', JSON.stringify(appState));
+                
+                // Также сохраняем словарь отдельно
+                saveUserDictionary();
+                
+            } catch (error) {
+                console.error('Ошибка сохранения состояния:', error);
+            }
+        }
+
+        function loadAppState() {
+            try {
+                // Загружаем состояние приложения
+                const savedState = localStorage.getItem('hindiAppState');
+                if (savedState) {
+                    appState = JSON.parse(savedState);
+                    
+                    // Восстанавливаем словарь
+                    myDictionary = appState.dictionary || {};
+                    
+                    // Восстанавливаем текст, если он был
+                    if (appState.currentText && appState.currentText.trim()) {
+                        currentText = appState.currentText;
+                        displayText(currentText);
+                        
+                        // Восстанавливаем позицию прокрутки
+                        setTimeout(() => {
+                            const textDisplay = document.getElementById('textDisplay');
+                            if (textDisplay && appState.scrollPosition) {
+                                textDisplay.scrollTop = appState.scrollPosition;
+                            }
+                        }, 500);
+                        
+                        showNotification('📖 Восстановлены ваши предыдущие субтитры');
+                    }
+                    
+                    // Загружаем словарь из localStorage (если есть отдельно)
+                    loadUserDictionary();
+                    
+                    console.log('✅ Состояние приложения восстановлено');
+                } else {
+                    // Инициализируем пустое состояние
+                    appState = {
+                        currentText: "",
+                        scrollPosition: 0,
+                        dictionary: {},
+                        lastOpenedFile: ""
+                    };
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки состояния:', error);
+                myDictionary = {};
+                saveUserDictionary();
+            }
+        }
+
+        // Автосохранение при изменении данных
+        function setupAutoSave() {
+            // Сохраняем каждые 30 секунд
+            setInterval(saveAppState, 30000);
+            
+            // Сохраняем при закрытии вкладки
+            window.addEventListener('beforeunload', saveAppState);
+            
+            // Сохраняем при изменении словаря
+            const originalSave = saveUserDictionary;
+            saveUserDictionary = function() {
+                originalSave.apply(this, arguments);
+                saveAppState();
+            };
+        }
+
         // ==================== ЗАГРУЗКА ФАЙЛОВ ====================
         function initFileUpload() {
             const fileInput = document.getElementById('fileInput');
@@ -1287,6 +1583,10 @@
                 reader.onload = function(e) {
                     currentText = e.target.result;
                     displayText(currentText);
+                    
+                    // Сохраняем состояние
+                    saveAppState();
+                    
                     showNotification('✅ Файл успешно загружен!');
                     
                     // Обновляем прогресс-бар
@@ -1382,6 +1682,10 @@
                     }
                 });
             }
+            
+            // Включаем выделение текста
+            textDisplay.style.userSelect = 'text';
+            textDisplay.style.webkitUserSelect = 'text';
         }
 
         function parseSRT(srtText) {
@@ -1545,6 +1849,7 @@ ${inBaseDict}
         function addWordToMyDictionary(word, translation) {
             myDictionary[word] = translation;
             saveUserDictionary();
+            saveAppState();
             
             showNotification(`✅ Слово "${word}" добавлено в ваш словарь!`);
             
@@ -1576,16 +1881,6 @@ ${inBaseDict}
             } else {
                 addNewWordManually(selectedWord);
             }
-        }
-
-        function addCustomWord() {
-            const word = prompt('Введите слово на хинди:');
-            if (!word || !word.trim()) return;
-            
-            const translation = prompt(`Введите перевод слова "${word}":`);
-            if (!translation || !translation.trim()) return;
-            
-            addWordToMyDictionary(word.trim(), translation.trim());
         }
 
         function ignoreWord(word) {
@@ -1838,6 +2133,7 @@ ${inBaseDict}
             if (confirm(`Удалить слово "${word}" из словаря?`)) {
                 delete myDictionary[word];
                 saveUserDictionary();
+                saveAppState();
                 updateDictionaryView();
                 updateStatistics();
                 showNotification(`🗑️ Слово "${word}" удалено`);
@@ -1850,6 +2146,7 @@ ${inBaseDict}
             if (newTranslation && newTranslation.trim()) {
                 myDictionary[word] = newTranslation.trim();
                 saveUserDictionary();
+                saveAppState();
                 updateDictionaryView();
                 showNotification(`✏️ Перевод слова "${word}" обновлён`);
             }
@@ -1891,6 +2188,7 @@ ${inBaseDict}
                         // Объединяем словари
                         myDictionary = { ...myDictionary, ...importedDict };
                         saveUserDictionary();
+                        saveAppState();
                         
                         updateDictionaryView();
                         updateStatistics();
@@ -1917,6 +2215,7 @@ ${inBaseDict}
                 
                 myDictionary = {};
                 saveUserDictionary();
+                saveAppState();
                 updateDictionaryView();
                 updateStatistics();
                 
@@ -1924,7 +2223,7 @@ ${inBaseDict}
             }
         }
 
-        // ==================== СИСТЕМА ПОВТОРЕНИЯ ====================
+        // ==================== СИСТЕМА ПОВТОРЕНИЯ (ИСПРАВЛЕНА) ====================
         function startReview() {
             const words = Object.keys(myDictionary);
             
@@ -1983,8 +2282,22 @@ ${inBaseDict}
             
             const card = reviewCards[currentCardIndex];
             document.getElementById('cardContent').innerHTML = card.word;
+            
+            // ИСПРАВЛЕНИЕ: показываем только перевод без дублирования хинди-слова
             document.getElementById('cardAnswer').innerHTML = card.translation;
             document.getElementById('cardAnswer').style.display = 'none';
+            
+            // Корректируем стили для мобильных устройств
+            document.getElementById('cardAnswer').style.cssText = `
+                font-size: 2rem;
+                color: rgba(255,255,255,0.9);
+                margin-top: 20px;
+                display: none;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
+                padding: 0 10px;
+            `;
             
             isAnswerShown = false;
             
@@ -2348,118 +2661,113 @@ ${inBaseDict}
             displayText(exampleText);
             showNotification('🎬 Пример из индийского видео загружен! Кликайте на слова для перевода.');
         }
-// ==================== АВТОМАТИЧЕСКОЕ РЕЗЕРВНОЕ КОПИРОВАНИЕ ====================
-// Автоматический экспорт словаря каждую неделю
-setInterval(() => {
-    if (Object.keys(myDictionary).length > 0) {
-        // Создаём резервную копию в localStorage
-        const backupKey = 'hindi_backup_' + new Date().toISOString().split('T')[0];
-        localStorage.setItem(backupKey, JSON.stringify(myDictionary));
-        
-        // Показываем уведомление (раз в неделю)
-        showNotification('📅 Автоматическая резервная копия словаря создана');
-        
-        // Оставляем только последние 4 резервные копии
-        cleanOldBackups();
-    }
-}, 7 * 24 * 60 * 60 * 1000); // Каждые 7 дней
 
-// Функция очистки старых резервных копий
-function cleanOldBackups() {
-    const backups = [];
-    
-    // Собираем все резервные копии
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('hindi_backup_')) {
-            backups.push({
-                key: key,
-                date: key.replace('hindi_backup_', '')
+        // ==================== АВТОМАТИЧЕСКОЕ РЕЗЕРВНОЕ КОПИРОВАНИЕ ====================
+        // Автоматический экспорт словаря каждую неделю
+        setInterval(() => {
+            if (Object.keys(myDictionary).length > 0) {
+                // Создаём резервную копию в localStorage
+                const backupKey = 'hindi_backup_' + new Date().toISOString().split('T')[0];
+                localStorage.setItem(backupKey, JSON.stringify(myDictionary));
+                
+                // Показываем уведомление (раз в неделю)
+                showNotification('📅 Автоматическая резервная копия словаря создана');
+                
+                // Оставляем только последние 4 резервные копии
+                cleanOldBackups();
+            }
+        }, 7 * 24 * 60 * 60 * 1000); // Каждые 7 дней
+
+        // Функция очистки старых резервных копий
+        function cleanOldBackups() {
+            const backups = [];
+            
+            // Собираем все резервные копии
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('hindi_backup_')) {
+                    backups.push({
+                        key: key,
+                        date: key.replace('hindi_backup_', '')
+                    });
+                }
+            }
+            
+            // Сортируем по дате (новые сначала)
+            backups.sort((a, b) => b.date.localeCompare(a.date));
+            
+            // Удаляем старые, оставляем только 4 последние
+            if (backups.length > 4) {
+                for (let i = 4; i < backups.length; i++) {
+                    localStorage.removeItem(backups[i].key);
+                }
+            }
+        }
+
+        // Функция восстановления из резервной копии
+        function restoreFromBackup() {
+            const backups = [];
+            
+            // Собираем все резервные копии
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('hindi_backup_')) {
+                    backups.push({
+                        key: key,
+                        date: key.replace('hindi_backup_', '')
+                    });
+                }
+            }
+            
+            if (backups.length === 0) {
+                alert('Резервных копий не найдено');
+                return;
+            }
+            
+            // Сортируем по дате (новые сначала)
+            backups.sort((a, b) => b.date.localeCompare(a.date));
+            
+            // Показываем список резервных копий
+            let backupList = 'Выберите резервную копию для восстановления:\n\n';
+            backups.forEach((backup, index) => {
+                backupList += `${index + 1}. ${backup.date} (${JSON.parse(localStorage.getItem(backup.key)).length} слов)\n`;
             });
+            
+            const choice = prompt(backupList + '\nВведите номер (1-' + backups.length + '):');
+            const index = parseInt(choice) - 1;
+            
+            if (index >= 0 && index < backups.length) {
+                if (confirm(`Восстановить словарь от ${backups[index].date}?\nТекущий словарь будет заменён.`)) {
+                    const backupData = JSON.parse(localStorage.getItem(backups[index].key));
+                    myDictionary = backupData;
+                    saveUserDictionary();
+                    saveAppState();
+                    updateDictionaryView();
+                    updateStatistics();
+                    showNotification('✅ Словарь восстановлен из резервной копии от ' + backups[index].date);
+                }
+            }
         }
-    }
-    
-    // Сортируем по дате (новые сначала)
-    backups.sort((a, b) => b.date.localeCompare(a.date));
-    
-    // Удаляем старые, оставляем только 4 последние
-    if (backups.length > 4) {
-        for (let i = 4; i < backups.length; i++) {
-            localStorage.removeItem(backups[i].key);
-        }
-    }
-}
 
-// Функция восстановления из резервной копии (добавьте кнопку в интерфейс)
-function restoreFromBackup() {
-    const backups = [];
-    
-    // Собираем все резервные копии
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('hindi_backup_')) {
-            backups.push({
-                key: key,
-                date: key.replace('hindi_backup_', '')
-            });
-        }
-    }
-    
-    if (backups.length === 0) {
-        alert('Резервных копий не найдено');
-        return;
-    }
-    
-    // Сортируем по дате (новые сначала)
-    backups.sort((a, b) => b.date.localeCompare(a.date));
-    
-    // Показываем список резервных копий
-    let backupList = 'Выберите резервную копию для восстановления:\n\n';
-    backups.forEach((backup, index) => {
-        backupList += `${index + 1}. ${backup.date} (${JSON.parse(localStorage.getItem(backup.key)).length} слов)\n`;
-    });
-    
-    const choice = prompt(backupList + '\nВведите номер (1-' + backups.length + '):');
-    const index = parseInt(choice) - 1;
-    
-    if (index >= 0 && index < backups.length) {
-        if (confirm(`Восстановить словарь от ${backups[index].date}?\nТекущий словарь будет заменён.`)) {
-            const backupData = JSON.parse(localStorage.getItem(backups[index].key));
-            myDictionary = backupData;
-            saveUserDictionary();
-            updateDictionaryView();
-            updateStatistics();
-            showNotification('✅ Словарь восстановлен из резервной копии от ' + backups[index].date);
-        }
-    }
-}
-
-// Добавьте эту кнопку в интерфейс (во вкладку Словарь)
-function addBackupButtonToUI() {
-    // Эта функция добавит кнопку восстановления
-    // Можно вызвать её при загрузке приложения
-    const dictionaryTab = document.getElementById('dictionary');
-    if (dictionaryTab) {
-        // Найдём контейнер с кнопками
-        const buttonContainer = dictionaryTab.querySelector('.action-buttons');
-        if (buttonContainer) {
-            const restoreButton = document.createElement('button');
-            restoreButton.className = 'action-btn';
-            restoreButton.style.background = '#9b59b6';
-            restoreButton.style.color = 'white';
-            restoreButton.innerHTML = '<span>🔄</span> Восстановить резервную копию';
-            restoreButton.onclick = restoreFromBackup;
-            buttonContainer.appendChild(restoreButton);
-        }
-    }
-}
-
-// Вызываем добавление кнопки при загрузке
-setTimeout(addBackupButtonToUI, 1000);
-
-// ==================== ГОТОВО! ====================
-console.log('✅ Приложение "Учим Хинди" успешно загружено!');
         // ==================== ГОТОВО! ====================
+        console.log('✅ Приложение "Учим Хинди" успешно загружено!');
+        
+        // Запускаем автосохранение
+        setTimeout(setupAutoSave, 2000);
+        
+        // Добавляем кнопку восстановления в интерфейс
+        setTimeout(() => {
+            const buttonContainer = document.querySelector('#dictionary .action-buttons');
+            if (buttonContainer) {
+                const restoreButton = document.createElement('button');
+                restoreButton.className = 'action-btn';
+                restoreButton.style.background = '#9b59b6';
+                restoreButton.style.color = 'white';
+                restoreButton.innerHTML = '<span>🔄</span> Восстановить резервную копию';
+                restoreButton.onclick = restoreFromBackup;
+                buttonContainer.appendChild(restoreButton);
+            }
+        }, 1000);
     </script>
 </body>
 </html>
