@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎧 ХИНДИ - Полное приложение с сохранением</title>
+    <title>🎧 ХИНДИ - Полное приложение с редактированием</title>
     
     <!-- Стили -->
     <style>
@@ -237,7 +237,7 @@
             opacity: 1;
         }
 
-        /* СЛОВАРЬ - С КНОПКОЙ ОЗВУЧКИ */
+        /* СЛОВАРЬ - С КНОПКАМИ УПРАВЛЕНИЯ */
         .dictionary-list {
             max-height: 300px;
             overflow-y: auto;
@@ -253,6 +253,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.2s;
+        }
+
+        .dictionary-item:hover {
+            background: #f0f4ff;
+            transform: translateX(5px);
         }
 
         .dictionary-text {
@@ -275,7 +281,8 @@
             gap: 8px;
         }
 
-        .speak-btn {
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .dict-btn {
             background: #6a11cb;
             color: white;
             border: none;
@@ -287,9 +294,31 @@
             justify-content: center;
             cursor: pointer;
             font-size: 16px;
+            transition: all 0.2s;
         }
 
-        /* МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ СЛОВ */
+        .dict-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+
+        .speak-btn {
+            background: #6a11cb;
+        }
+
+        .edit-btn {
+            background: #00b09b;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+        }
+
+        .delete-btn:hover {
+            background: #ff4757;
+        }
+
+        /* МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ И РЕДАКТИРОВАНИЯ */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -454,6 +483,17 @@
             .flashcard-answer {
                 font-size: 1.4rem;
             }
+
+            .dictionary-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .dict-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
         }
 
         /* АНИМАЦИЯ ЗАГРУЗКИ */
@@ -480,7 +520,7 @@
     </style>
 </head>
 <body>
-    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ СЛОВ -->
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ДОБАВЛЕНИЯ И РЕДАКТИРОВАНИЯ -->
     <div id="addWordModal" class="modal-overlay">
         <div class="modal-content">
             <h3 class="modal-title" id="modalTitle">Добавить в словарь</h3>
@@ -514,7 +554,7 @@
         <!-- ШАПКА -->
         <header class="app-header">
             <h1 class="app-title">🪷 УЧИМ ХИНДИ</h1>
-            <p class="app-subtitle">Простой и быстрый помощник</p>
+            <p class="app-subtitle">Полное управление словарём</p>
         </header>
 
         <!-- ВКЛАДКИ -->
@@ -588,6 +628,9 @@
             <h3 style="color: #6a11cb; margin-bottom: 15px;">📚 Мой словарь</h3>
             <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
                 Всего слов/предложений: <span id="totalWordsStat">0</span>
+                <button onclick="showEditOptions()" class="action-btn" style="background: #00b09b; color: white; padding: 8px 12px; font-size: 13px; margin-left: 10px;">
+                    ⚙️ Управление
+                </button>
             </p>
 
             <div id="dictionaryList" class="dictionary-list">
@@ -602,7 +645,7 @@
                     ✏️ Добавить
                 </button>
                 <button onclick="clearAllWords()" class="action-btn btn-warning">
-                    🗑️ Очистить
+                    🗑️ Очистить всё
                 </button>
             </div>
         </div>
@@ -644,7 +687,7 @@
         <!-- ФУТЕР -->
         <footer style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #f0f0f0; color: #666; font-size: 0.9rem;">
             <p>✨ Учим хинди с удовольствием ✨</p>
-            <p style="font-size: 0.8rem; margin-top: 5px;">Текст сохраняется автоматически при закрытии</p>
+            <p style="font-size: 0.8rem; margin-top: 5px;">Теперь можно редактировать и удалять слова!</p>
         </footer>
     </div>
 
@@ -658,6 +701,7 @@
         let reviewCards = [];
         let currentCardIndex = 0;
         let selectionPanelVisible = false;
+        let currentEditingWord = null;
 
         // Базовый словарь
         const baseDictionary = {
@@ -1002,6 +1046,7 @@
             cancelBtn.addEventListener('click', function() {
                 modal.style.display = 'none';
                 localStorage.removeItem('hindiModalState');
+                currentEditingWord = null;
             });
             
             // Кнопка сохранения
@@ -1019,15 +1064,21 @@
                     return;
                 }
                 
-                // Добавляем в словарь
+                if (currentEditingWord && currentEditingWord !== hindiText) {
+                    // Если редактировали и изменили текст - удаляем старый
+                    delete myDictionary[currentEditingWord];
+                }
+                
+                // Добавляем/обновляем в словаре
                 myDictionary[hindiText] = translation;
                 saveUserDictionary();
                 updateDictionaryView();
                 
                 modal.style.display = 'none';
                 localStorage.removeItem('hindiModalState');
+                currentEditingWord = null;
                 
-                showNotification(`✅ "${hindiText.length > 20 ? hindiText.substring(0, 20) + '...' : hindiText}" добавлено`);
+                showNotification(`✅ "${hindiText.length > 20 ? hindiText.substring(0, 20) + '...' : hindiText}" ${currentEditingWord ? 'обновлено' : 'добавлено'}`);
             });
             
             // Закрытие по клику на оверлей
@@ -1035,6 +1086,7 @@
                 if (event.target === modal) {
                     modal.style.display = 'none';
                     localStorage.removeItem('hindiModalState');
+                    currentEditingWord = null;
                 }
             });
         }
@@ -1046,6 +1098,7 @@
             document.getElementById('modalHindiInput').placeholder = 'Текст на хинди...';
             document.getElementById('modalTranslationInput').value = '';
             document.getElementById('addWordModal').style.display = 'flex';
+            currentEditingWord = null;
         }
 
         function showAddWordModalWithText(hindiText, translation = '') {
@@ -1054,6 +1107,27 @@
             document.getElementById('modalHindiInput').readOnly = true;
             document.getElementById('modalTranslationInput').value = translation;
             document.getElementById('addWordModal').style.display = 'flex';
+            currentEditingWord = null;
+            
+            // Автофокус на поле перевода
+            setTimeout(() => {
+                document.getElementById('modalTranslationInput').focus();
+            }, 100);
+        }
+
+        function showEditWordModal(word) {
+            if (!word || !myDictionary[word]) {
+                showNotification('⚠️ Слово не найдено');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = 'Редактировать слово';
+            document.getElementById('modalHindiInput').value = word;
+            document.getElementById('modalHindiInput').readOnly = false;
+            document.getElementById('modalHindiInput').placeholder = 'Текст на хинди...';
+            document.getElementById('modalTranslationInput').value = myDictionary[word];
+            document.getElementById('addWordModal').style.display = 'flex';
+            currentEditingWord = word;
             
             // Автофокус на поле перевода
             setTimeout(() => {
@@ -1196,6 +1270,55 @@
             }
         }
 
+        // ==================== УДАЛЕНИЕ И РЕДАКТИРОВАНИЕ СЛОВ ====================
+        function removeWordFromDictionary(word) {
+            if (!word || !myDictionary[word]) {
+                showNotification('⚠️ Слово не найдено');
+                return;
+            }
+            
+            const translation = myDictionary[word];
+            const wordPreview = word.length > 20 ? word.substring(0, 20) + '...' : word;
+            
+            if (confirm(`Удалить слово из словаря?\n\n"${wordPreview}"\n→ ${translation}`)) {
+                // Удаляем из словаря
+                delete myDictionary[word];
+                
+                // Сохраняем изменения
+                saveUserDictionary();
+                saveAppState();
+                
+                // Обновляем отображение
+                updateDictionaryView();
+                
+                showNotification(`🗑️ Слово удалено: ${wordPreview}`);
+            }
+        }
+
+        function editWordInDictionary(word) {
+            if (!word || !myDictionary[word]) {
+                showNotification('⚠️ Слово не найдено');
+                return;
+            }
+            
+            showEditWordModal(word);
+        }
+
+        function showEditOptions() {
+            const options = `
+Выберите действие:
+
+1. 📝 Редактировать слово
+2. 🗑️ Удалить слово
+3. 📋 Экспортировать словарь
+4. 🗑️ Очистить весь словарь
+
+Для редактирования или удаления просто нажмите на кнопки ✏️ или 🗑️ рядом с нужным словом в списке.
+            `;
+            
+            alert(options);
+        }
+
         // ==================== СЛОВАРЬ ====================
         function loadUserDictionary() {
             try {
@@ -1241,8 +1364,14 @@
                         </div>
                     </div>
                     <div class="dictionary-actions">
-                        <button onclick="speakText('${word.replace(/'/g, "\\'")}')" class="speak-btn">
+                        <button onclick="speakText('${word.replace(/'/g, "\\'")}')" class="dict-btn speak-btn" title="Озвучить">
                             🔊
+                        </button>
+                        <button onclick="editWordInDictionary('${word.replace(/'/g, "\\'")}')" class="dict-btn edit-btn" title="Редактировать">
+                            ✏️
+                        </button>
+                        <button onclick="removeWordFromDictionary('${word.replace(/'/g, "\\'")}')" class="dict-btn delete-btn" title="Удалить">
+                            🗑️
                         </button>
                     </div>
                 `;
@@ -1257,17 +1386,26 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'мой_словарь.json';
+            link.download = 'мой_словарь_хинди.json';
             link.click();
-            showNotification('💾 Словарь сохранён');
+            showNotification('💾 Словарь сохранён в файл');
         }
 
         function clearAllWords() {
-            if (confirm('Очистить весь словарь?')) {
+            if (Object.keys(myDictionary).length === 0) {
+                showNotification('🗑️ Словарь уже пуст');
+                return;
+            }
+            
+            if (confirm(`❌ УДАЛИТЬ ВЕСЬ СЛОВАРЬ?\n\nЭто удалит все ${Object.keys(myDictionary).length} слов.\nДействие нельзя отменить!`) && 
+                confirm('Точно удалить ВСЕ слова?')) {
+                
                 myDictionary = {};
                 saveUserDictionary();
+                saveAppState();
                 updateDictionaryView();
-                showNotification('🗑️ Словарь очищен');
+                
+                showNotification('🗑️ Весь словарь очищен');
             }
         }
 
