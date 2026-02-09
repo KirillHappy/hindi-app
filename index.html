@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎧 ХИНДИ - Полное приложение с редактированием</title>
+    <title>🎧 ХИНДИ - Полное приложение с интервальным повторением</title>
     
     <!-- Стили -->
     <style>
@@ -429,6 +429,30 @@
             cursor: pointer;
         }
 
+        /* СТАТИСТИКА */
+        .stats-panel {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .stats-item {
+            display: inline-block;
+            margin-right: 15px;
+            padding: 4px 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stats-value {
+            font-weight: 700;
+            color: #6a11cb;
+        }
+
         /* УВЕДОМЛЕНИЯ */
         .notification {
             position: fixed;
@@ -453,6 +477,59 @@
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
+        }
+
+        /* НАПРАВЛЕНИЕ КАРТОЧЕК */
+        .direction-selector {
+            display: flex;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .direction-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .direction-btn.active {
+            background: #6a11cb;
+            color: white;
+            border-color: #6a11cb;
+        }
+
+        /* РЕЖИМЫ ПОВТОРЕНИЯ */
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background: #f0f0f0;
+            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: #6a11cb;
+            color: white;
         }
 
         /* МОБИЛЬНАЯ АДАПТАЦИЯ */
@@ -493,6 +570,14 @@
                 width: 32px;
                 height: 32px;
                 font-size: 14px;
+            }
+
+            .mode-selector {
+                flex-direction: column;
+            }
+
+            .direction-selector {
+                flex-direction: column;
             }
         }
 
@@ -540,6 +625,9 @@
             <button id="selectionAddBtn" class="selection-btn" style="background: #00b09b; color: white;">
                 📝 Добавить
             </button>
+            <button id="selectionHighlightBtn" class="selection-btn" style="background: #ffeb3b; color: #333;">
+                🔍 Выделить слово
+            </button>
             <button id="selectionSpeakBtn" class="selection-btn" style="background: #6a11cb; color: white;">
                 🔊 Озвучить
             </button>
@@ -553,8 +641,8 @@
     <div id="app" class="app-container">
         <!-- ШАПКА -->
         <header class="app-header">
-            <h1 class="app-title">🪷 УЧИМ ХИНДИ</h1>
-            <p class="app-subtitle">Полное управление словарём</p>
+            <h1 class="app-title">🪷 УЧИМ ХИНДИ С ИНТЕРВАЛЬНЫМ ПОВТОРЕНИЕМ</h1>
+            <p class="app-subtitle">Интеллектуальная система повторения как в Anki</p>
         </header>
 
         <!-- ВКЛАДКИ -->
@@ -626,12 +714,12 @@
         <!-- ВКЛАДКА 2: СЛОВАРЬ -->
         <div id="dictionary" class="tab-content">
             <h3 style="color: #6a11cb; margin-bottom: 15px;">📚 Мой словарь</h3>
-            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-                Всего слов/предложений: <span id="totalWordsStat">0</span>
-                <button onclick="showEditOptions()" class="action-btn" style="background: #00b09b; color: white; padding: 8px 12px; font-size: 13px; margin-left: 10px;">
-                    ⚙️ Управление
-                </button>
-            </p>
+            
+            <div class="stats-panel">
+                <span class="stats-item">Всего: <span id="totalWordsStat" class="stats-value">0</span></span>
+                <span class="stats-item">В карточках: <span id="cardsCountStat" class="stats-value">0</span></span>
+                <span class="stats-item">Готово к повторению: <span id="dueCardsStat" class="stats-value">0</span></span>
+            </div>
 
             <div id="dictionaryList" class="dictionary-list">
                 <!-- Слова будут здесь -->
@@ -644,6 +732,9 @@
                 <button onclick="showAddWordModal()" class="action-btn btn-primary">
                     ✏️ Добавить
                 </button>
+                <button onclick="showEditOptions()" class="action-btn" style="background: #00b09b; color: white;">
+                    ⚙️ Управление
+                </button>
                 <button onclick="clearAllWords()" class="action-btn btn-warning">
                     🗑️ Очистить всё
                 </button>
@@ -652,42 +743,94 @@
 
         <!-- ВКЛАДКА 3: ПОВТОРЕНИЕ -->
         <div id="repeat" class="tab-content">
-            <h3 style="color: #6a11cb; margin-bottom: 15px;">🔄 Повторение слов</h3>
-            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-                <button onclick="speakCurrentCard()" class="action-btn" style="background: #6a11cb; color: white; padding: 8px 12px; font-size: 13px;">
-                    🔊 Озвучить текущее
+            <h3 style="color: #6a11cb; margin-bottom: 10px;">
+                🔄 Повторение слов 
+                <span id="sessionProgress" style="font-size: 0.8em; color: #666;">(0/0)</span>
+            </h3>
+            
+            <!-- РЕЖИМЫ ПОВТОРЕНИЯ -->
+            <div class="mode-selector">
+                <button onclick="startReview('due')" class="mode-btn" id="modeDue">
+                    📅 Готовые к повторению
                 </button>
-            </p>
+                <button onclick="startReview('new')" class="mode-btn" id="modeNew">
+                    🆕 Только новые
+                </button>
+                <button onclick="startReview('all')" class="mode-btn" id="modeAll">
+                    📚 Все карточки
+                </button>
+            </div>
+            
+            <!-- ВЫБОР НАПРАВЛЕНИЯ -->
+            <div style="margin: 15px 0;">
+                <p style="color: #666; margin-bottom: 8px; font-size: 14px;">Направление карточек:</p>
+                <div class="direction-selector">
+                    <button onclick="setCardDirection('hi-ru')" class="direction-btn" id="dirHiRu">
+                        🇮🇳 Хинди → Русский 🇷🇺
+                    </button>
+                    <button onclick="setCardDirection('ru-hi')" class="direction-btn" id="dirRuHi">
+                        🇷🇺 Русский → Хинди 🇮🇳
+                    </button>
+                </div>
+            </div>
 
+            <!-- КАРТОЧКА -->
             <div id="flashcard" class="flashcard-container" onclick="toggleCardAnswer()">
                 <div id="cardContent" class="flashcard-content">
-                    Нажмите "Начать повторение"
+                    Выберите режим и нажмите "Начать повторение"
                 </div>
                 <div id="cardAnswer" class="flashcard-answer">
                     <!-- Перевод будет здесь -->
                 </div>
             </div>
 
+            <!-- КНОПКИ ОЦЕНКИ -->
             <div class="action-buttons">
-                <button onclick="startReview()" class="action-btn btn-success">
-                    ▶️ Начать
+                <button onclick="rateCard('again')" class="action-btn" style="background: #ff4444; color: white;">
+                    🔴 Снова
                 </button>
-                <button onclick="toggleCardAnswer()" class="action-btn btn-primary">
-                    📖 Показать перевод
+                <button onclick="rateCard('hard')" class="action-btn" style="background: #ff9800; color: white;">
+                    🟠 Сложно
                 </button>
-                <button onclick="rateCard('easy')" class="action-btn" style="background: #00c853; color: white;">
-                    😊 Легко
+                <button onclick="rateCard('good')" class="action-btn" style="background: #2196f3; color: white;">
+                    🔵 Нормально
                 </button>
-                <button onclick="rateCard('hard')" class="action-btn" style="background: #ff6b6b; color: white;">
-                    🤯 Сложно
+                <button onclick="rateCard('easy')" class="action-btn" style="background: #4caf50; color: white;">
+                    🟢 Легко
                 </button>
+            </div>
+            
+            <!-- ДОПОЛНИТЕЛЬНЫЕ КНОПКИ -->
+            <div class="action-buttons" style="margin-top: 10px;">
+                <button onclick="toggleCardAnswer()" class="action-btn" style="background: #9c27b0; color: white;">
+                    📖 Показать/скрыть ответ
+                </button>
+                <button onclick="speakCurrentCard()" class="action-btn" style="background: #6a11cb; color: white;">
+                    🔊 Озвучить
+                </button>
+                <button onclick="showCardInfo()" class="action-btn" style="background: #607d8b; color: white;">
+                    ℹ️ Инфо
+                </button>
+            </div>
+            
+            <!-- СТАТИСТИКА -->
+            <div class="stats-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>📊 Прогресс:</strong>
+                        <span id="statsText">Загружаем статистику...</span>
+                    </div>
+                    <button onclick="showStatistics()" class="action-btn" style="padding: 6px 12px; font-size: 12px; background: #6a11cb; color: white;">
+                        📈 Детали
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- ФУТЕР -->
         <footer style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #f0f0f0; color: #666; font-size: 0.9rem;">
-            <p>✨ Учим хинди с удовольствием ✨</p>
-            <p style="font-size: 0.8rem; margin-top: 5px;">Теперь можно редактировать и удалять слова!</p>
+            <p>✨ Интервальное повторение по алгоритму SM-2 ✨</p>
+            <p style="font-size: 0.8rem; margin-top: 5px;">Карточки запоминают ваш прогресс и показываются в оптимальное время</p>
         </footer>
     </div>
 
@@ -702,6 +845,9 @@
         let currentCardIndex = 0;
         let selectionPanelVisible = false;
         let currentEditingWord = null;
+        let cardDirection = "hi-ru"; // "hi-ru" или "ru-hi"
+        let reviewMode = "due"; // "due", "all", "new"
+        let currentReviewSession = [];
 
         // Базовый словарь
         const baseDictionary = {
@@ -741,193 +887,392 @@
             initFileUpload();
             initSelectionSystem();
             initModal();
+            initReviewUI();
             
-            // ЗАГРУЗКА СОХРАНЕННОГО СОСТОЯНИЯ ПЕРЕД ВСЕМ
+            // Загружаем сохраненное состояние
             loadAppState();
-            
-            // Затем загружаем словарь
             loadUserDictionary();
             updateDictionaryView();
             
-            // Запускаем автосохранение
-            setTimeout(setupAutoSave, 1000);
+            // Инициализируем систему повторения
+            initializeReviewSystem();
             
-            // Восстанавливаем модальное окно если оно было открыто
-            const savedModalState = localStorage.getItem('hindiModalState');
-            if (savedModalState) {
-                const state = JSON.parse(savedModalState);
-                if (state.visible && state.hindiText) {
-                    showAddWordModalWithText(state.hindiText, state.translation || '');
-                }
-            }
-            
+            setupAutoSave();
+            updateStats();
             showNotification('✨ Приложение восстановлено!');
         }
 
-        // ==================== АВТОСОХРАНЕНИЕ ТЕКСТА И ПОЗИЦИИ ====================
-        function saveAppState() {
-            const state = {
-                dictionary: myDictionary,
-                currentCardIndex: currentCardIndex,
-                reviewCards: reviewCards,
-                lastSave: new Date().toISOString(),
-                // СОХРАНЯЕМ ТЕКСТ И ПОЗИЦИЮ
-                currentText: currentText,
-                scrollPosition: document.getElementById('textDisplay').scrollTop || 0,
-                fileName: document.getElementById('fileInput').files[0]?.name || ''
-            };
-            localStorage.setItem('hindiAppState', JSON.stringify(state));
-            
-            // Также сохраняем модальное окно если оно открыто
-            const modal = document.getElementById('addWordModal');
-            if (modal.style.display === 'flex') {
-                const modalState = {
-                    visible: true,
-                    hindiText: document.getElementById('modalHindiInput').value,
-                    translation: document.getElementById('modalTranslationInput').value
-                };
-                localStorage.setItem('hindiModalState', JSON.stringify(modalState));
-            } else {
-                localStorage.removeItem('hindiModalState');
-            }
+        function initReviewUI() {
+            // Устанавливаем активные кнопки режимов
+            updateModeButtons();
+            updateDirectionButtons();
         }
 
-        // ЗАГРУЗКА СОХРАНЕННОГО СОСТОЯНИЯ ПРИ СТАРТЕ
-        function loadAppState() {
+        // ==================== ИНТЕРВАЛЬНОЕ ПОВТОРЕНИЕ ====================
+        function initializeReviewSystem() {
+            // Загружаем настройки направления карточек
+            const savedDirection = localStorage.getItem('hindiCardDirection');
+            if (savedDirection) {
+                cardDirection = savedDirection;
+            }
+            
+            // Загружаем карточки с прогрессом
+            loadReviewCards();
+            
+            console.log(`✅ Система повторения инициализирована. Карточек: ${reviewCards.length}`);
+        }
+
+        function loadReviewCards() {
             try {
-                const savedState = localStorage.getItem('hindiAppState');
-                if (savedState) {
-                    const state = JSON.parse(savedState);
-                    
-                    // Восстанавливаем словарь
-                    myDictionary = state.dictionary || {};
-                    
-                    // Восстанавливаем текст если он был
-                    if (state.currentText && state.currentText.trim()) {
-                        currentText = state.currentText;
-                        
-                        // Сразу показываем текст без задержки
-                        displaySavedText(currentText);
-                        
-                        // Восстанавливаем позицию прокрутки через небольшую задержку
-                        setTimeout(() => {
-                            const textDisplay = document.getElementById('textDisplay');
-                            if (textDisplay && state.scrollPosition) {
-                                textDisplay.scrollTop = state.scrollPosition;
-                                showNotification('📖 Восстановлен ваш предыдущий текст');
-                            }
-                        }, 100);
-                    }
-                    
-                    // Восстанавливаем прогресс повторения
-                    if (state.reviewCards) {
-                        reviewCards = state.reviewCards;
-                        currentCardIndex = state.currentCardIndex || 0;
-                    }
-                    
-                    console.log('✅ Состояние приложения восстановлено');
+                const saved = localStorage.getItem('hindiReviewCards');
+                if (saved) {
+                    reviewCards = JSON.parse(saved);
+                    console.log(`✅ Загружено ${reviewCards.length} карточек с прогрессом`);
                 }
             } catch (error) {
-                console.error('Ошибка загрузки состояния:', error);
-                myDictionary = {};
+                reviewCards = [];
+                console.error('Ошибка загрузки карточек:', error);
             }
         }
 
-        // ОТОБРАЖЕНИЕ СОХРАНЕННОГО ТЕКСТА (быстрая версия)
-        function displaySavedText(text) {
-            const textDisplay = document.getElementById('textDisplay');
-            if (!textDisplay) return;
+        function saveReviewCards() {
+            localStorage.setItem('hindiReviewCards', JSON.stringify(reviewCards));
+        }
+
+        // Алгоритм интервального повторения (упрощенный SM-2)
+        function calculateNextReview(card, difficulty) {
+            const now = Date.now();
+            const dayMs = 24 * 60 * 60 * 1000;
             
-            // Очищаем
-            textDisplay.innerHTML = '';
+            let newInterval = card.interval || 1;
+            let newStreak = card.streak || 0;
             
-            // Быстро отображаем сохраненный текст
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'saved-text-content';
-            contentDiv.style.cssText = `
-                font-size: 16px;
-                line-height: 1.4;
-                font-family: 'Georgia', serif;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-            `;
+            switch(difficulty) {
+                case 'again': // Снова (показать через 1 день)
+                    newInterval = 1;
+                    newStreak = 0;
+                    break;
+                    
+                case 'hard': // Сложно (маленький интервал)
+                    if (newInterval <= 1) newInterval = 1;
+                    else newInterval = Math.floor(newInterval * 1.2);
+                    newStreak = Math.max(0, newStreak - 1);
+                    break;
+                    
+                case 'good': // Нормально (стандартный интервал)
+                    if (newStreak === 0) newInterval = 1;
+                    else if (newStreak === 1) newInterval = 3;
+                    else newInterval = Math.floor(newInterval * 2.5);
+                    newStreak++;
+                    break;
+                    
+                case 'easy': // Легко (большой интервал)
+                    if (newStreak === 0) newInterval = 3;
+                    else if (newStreak === 1) newInterval = 7;
+                    else newInterval = Math.floor(newInterval * 3);
+                    newStreak += 2;
+                    break;
+            }
             
-            // Просто разбиваем на строки для быстрого отображения
-            const lines = text.split('\n');
+            // Ограничиваем максимальный интервал 365 днями
+            newInterval = Math.min(newInterval, 365);
             
-            lines.forEach(line => {
-                if (line.trim().length === 0) {
-                    contentDiv.appendChild(document.createElement('br'));
-                    return;
+            return {
+                interval: newInterval,
+                streak: newStreak,
+                nextReview: now + (newInterval * dayMs),
+                difficulty: difficulty,
+                lastReviewed: now
+            };
+        }
+
+        // ==================== ОБНОВЛЕННЫЙ РЕЖИМ ПОВТОРЕНИЯ ====================
+        function startReview(mode = "due") {
+            reviewMode = mode;
+            updateModeButtons();
+            
+            // Фильтруем карточки в зависимости от режима
+            let cardsToReview = [];
+            const now = Date.now();
+            
+            switch(mode) {
+                case "due": // Только готовые к повторению
+                    cardsToReview = reviewCards.filter(card => 
+                        !card.nextReview || card.nextReview <= now
+                    );
+                    break;
+                    
+                case "new": // Только новые
+                    cardsToReview = reviewCards.filter(card => 
+                        card.difficulty === "new" || !card.difficulty
+                    );
+                    break;
+                    
+                case "all": // Все карточки
+                    cardsToReview = [...reviewCards];
+                    break;
+            }
+            
+            if (cardsToReview.length === 0) {
+                // Если нет карточек для повторения, создаем из словаря
+                createReviewCardsFromDictionary();
+                cardsToReview = [...reviewCards].filter(card => {
+                    if (mode === "all") return true;
+                    if (mode === "new") return card.difficulty === "new" || !card.difficulty;
+                    return !card.nextReview || card.nextReview <= now;
+                });
+            }
+            
+            if (cardsToReview.length === 0) {
+                showNotification('🎉 Все карточки изучены! Заходите завтра.');
+                document.getElementById('cardContent').textContent = '🎉 Все карточки изучены!';
+                document.getElementById('cardAnswer').textContent = '';
+                document.getElementById('cardAnswer').classList.remove('show');
+                updateSessionProgress(0, 0);
+                return;
+            }
+            
+            // Перемешиваем карточки
+            shuffleArray(cardsToReview);
+            
+            // Сохраняем сессию
+            currentReviewSession = cardsToReview;
+            currentCardIndex = 0;
+            
+            // Показываем первую карточку
+            showCard();
+            
+            // Показываем статистику
+            const dueCount = reviewCards.filter(c => !c.nextReview || c.nextReview <= now).length;
+            const totalCount = reviewCards.length;
+            showNotification(`📚 Сессия начата: ${cardsToReview.length} карточек (${dueCount}/${totalCount} готово)`);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createReviewCardsFromDictionary() {
+            const now = Date.now();
+            
+            Object.keys(myDictionary).forEach(word => {
+                // Проверяем, нет ли уже такой карточки
+                const exists = reviewCards.find(card => 
+                    card.front === word && card.back === myDictionary[word]
+                );
+                
+                if (!exists) {
+                    reviewCards.push({
+                        front: word,
+                        back: myDictionary[word],
+                        direction: cardDirection,
+                        tags: [],
+                        difficulty: "new",
+                        nextReview: now, // Показываем сразу
+                        interval: 1,
+                        streak: 0,
+                        highlightedWord: "",
+                        created: now,
+                        lastReviewed: null
+                    });
                 }
-                
-                const words = line.split(/(\s+)/);
-                const lineDiv = document.createElement('div');
-                lineDiv.style.marginBottom = '8px';
-                
-                words.forEach(word => {
-                    if (word.trim().length === 0) {
-                        lineDiv.appendChild(document.createTextNode(' '));
-                        return;
-                    }
-                    
-                    const cleanWord = word.replace(/[.,;:!?"'()\[\]{}]/g, '');
-                    
-                    const span = document.createElement('span');
-                    span.className = 'hindi-word';
-                    span.textContent = word;
-                    span.dataset.word = cleanWord;
-                    
-                    span.onclick = function(e) {
-                        e.stopPropagation();
-                        
-                        // Снимаем выделение
-                        document.querySelectorAll('.hindi-word.selected').forEach(w => {
-                            w.classList.remove('selected');
-                        });
-                        
-                        // Выделяем текущее
-                        this.classList.add('selected');
-                        selectedWord = cleanWord;
-                        
-                        // Показываем перевод
-                        showWordTranslation(cleanWord);
-                    };
-                    
-                    lineDiv.appendChild(span);
-                    lineDiv.appendChild(document.createTextNode(' '));
-                });
-                
-                contentDiv.appendChild(lineDiv);
             });
             
-            textDisplay.appendChild(contentDiv);
+            saveReviewCards();
+            updateStats();
         }
 
-        // АВТОСОХРАНЕНИЕ КАЖДЫЕ 10 СЕКУНД И ПРИ ПЕРЕХОДЕ МЕЖДУ ВКЛАДКАМИ
-        function setupAutoSave() {
-            // Сохраняем каждые 10 секунд
-            setInterval(saveAppState, 10000);
-            
-            // Сохраняем при закрытии
-            window.addEventListener('beforeunload', saveAppState);
-            
-            // Сохраняем при прокрутке текста
-            const textDisplay = document.getElementById('textDisplay');
-            if (textDisplay) {
-                let scrollTimeout;
-                textDisplay.addEventListener('scroll', function() {
-                    clearTimeout(scrollTimeout);
-                    scrollTimeout = setTimeout(saveAppState, 1000); // Сохраняем через 1 сек после остановки прокрутки
-                });
+        function showCard() {
+            if (currentCardIndex >= currentReviewSession.length) {
+                // Сессия завершена
+                document.getElementById('cardContent').textContent = '🎉 Сессия завершена!';
+                document.getElementById('cardAnswer').textContent = 'Нажмите "Начать повторение" для новой сессии';
+                document.getElementById('cardAnswer').classList.remove('show');
+                
+                updateSessionProgress(0, 0);
+                
+                // Показываем статистику
+                setTimeout(() => {
+                    const dueCount = reviewCards.filter(c => !c.nextReview || c.nextReview <= Date.now()).length;
+                    showNotification(`✅ Сессия завершена! Осталось карточек: ${dueCount}`);
+                }, 500);
+                
+                return;
             }
             
-            // Сохраняем при переходе между вкладками
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    setTimeout(saveAppState, 100);
-                });
+            const card = currentReviewSession[currentCardIndex];
+            
+            // Определяем, что показывать в зависимости от направления
+            let frontText = "";
+            let backText = "";
+            
+            if (card.direction === "hi-ru" || !card.direction) {
+                frontText = card.front;
+                backText = card.back;
+            } else {
+                frontText = card.back;
+                backText = card.front;
+            }
+            
+            // Если есть выделенное слово, форматируем текст
+            if (card.highlightedWord && card.highlightedWord.trim() !== "") {
+                const regex = new RegExp(`(${escapeRegExp(card.highlightedWord)})`, 'gi');
+                frontText = frontText.replace(regex, '<span style="background: #ffeb3b; padding: 2px 4px; border-radius: 3px; font-weight: bold;">$1</span>');
+            }
+            
+            document.getElementById('cardContent').innerHTML = frontText;
+            document.getElementById('cardAnswer').textContent = backText;
+            document.getElementById('cardAnswer').classList.remove('show');
+            
+            // Адаптивный размер шрифта
+            const isLongText = frontText.length > 30 || backText.length > 30;
+            document.getElementById('cardContent').style.fontSize = isLongText ? '1.5rem' : '2rem';
+            document.getElementById('cardAnswer').style.fontSize = isLongText ? '1.3rem' : '1.6rem';
+            
+            // Обновляем прогресс
+            updateSessionProgress(currentCardIndex + 1, currentReviewSession.length);
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function updateSessionProgress(current, total) {
+            const progress = total > 0 ? Math.round((current / total) * 100) : 0;
+            document.getElementById('sessionProgress').innerHTML = 
+                `(${current}/${total} - ${progress}%)`;
+        }
+
+        // ==================== ОБНОВЛЕННАЯ СИСТЕМА ОЦЕНКИ ====================
+        function rateCard(difficulty) {
+            if (currentCardIndex >= currentReviewSession.length || currentReviewSession.length === 0) {
+                showNotification('ℹ️ Нет активной сессии. Начните повторение.');
+                return;
+            }
+            
+            const currentCard = currentReviewSession[currentCardIndex];
+            
+            // Находим карточку в основном массиве
+            const cardIndex = reviewCards.findIndex(card => 
+                card.front === currentCard.front && card.back === currentCard.back
+            );
+            
+            if (cardIndex !== -1) {
+                // Обновляем карточку с новыми данными
+                const newData = calculateNextReview(reviewCards[cardIndex], difficulty);
+                reviewCards[cardIndex] = {
+                    ...reviewCards[cardIndex],
+                    ...newData
+                };
+                
+                // Сохраняем изменения
+                saveReviewCards();
+                saveAppState();
+                updateStats();
+            }
+            
+            // Показываем уведомление
+            const messages = {
+                'again': '🔄 Снова (через 1 день)',
+                'hard': '⚠️ Сложно (маленький интервал)',
+                'good': '👍 Нормально (стандартный интервал)',
+                'easy': '😊 Легко (большой интервал)'
+            };
+            showNotification(messages[difficulty] || '✅ Оценено');
+            
+            // Переходим к следующей карточке
+            currentCardIndex++;
+            
+            // Показываем следующую карточку
+            showCard();
+        }
+
+        function toggleCardAnswer() {
+            const answer = document.getElementById('cardAnswer');
+            answer.classList.toggle('show');
+        }
+
+        // ==================== УПРАВЛЕНИЕ НАПРАВЛЕНИЕМ КАРТОЧЕК ====================
+        function updateDirectionButtons() {
+            document.querySelectorAll('.direction-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.id === `dir${cardDirection === 'hi-ru' ? 'HiRu' : 'RuHi'}`) {
+                    btn.classList.add('active');
+                }
             });
+        }
+
+        function setCardDirection(direction) {
+            cardDirection = direction;
+            localStorage.setItem('hindiCardDirection', direction);
+            updateDirectionButtons();
+            
+            // Обновляем направление для всех карточек
+            reviewCards.forEach(card => {
+                card.direction = direction;
+            });
+            
+            saveReviewCards();
+            
+            // Перезагружаем текущую карточку если идет повторение
+            if (currentReviewSession.length > 0 && currentCardIndex < currentReviewSession.length) {
+                showCard();
+            }
+            
+            showNotification(`🔄 Направление: ${direction === 'hi-ru' ? 'Хинди → Русский' : 'Русский → Хинди'}`);
+        }
+
+        function updateModeButtons() {
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.id === `mode${reviewMode.charAt(0).toUpperCase() + reviewMode.slice(1)}`) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // ==================== ВЫДЕЛЕНИЕ СЛОВ В ПРЕДЛОЖЕНИЯХ ====================
+        function highlightWordInDictionary(word, textToHighlight) {
+            if (!word || !textToHighlight) {
+                showNotification('⚠️ Выберите слово для выделения');
+                return;
+            }
+            
+            // Находим карточку с этим текстом
+            const cardIndex = reviewCards.findIndex(card => 
+                card.front === textToHighlight || card.back === textToHighlight
+            );
+            
+            if (cardIndex === -1) {
+                // Создаем новую карточку если ее нет
+                const now = Date.now();
+                reviewCards.push({
+                    front: textToHighlight,
+                    back: myDictionary[textToHighlight] || '',
+                    direction: cardDirection,
+                    tags: ['с предложением'],
+                    difficulty: "new",
+                    nextReview: now,
+                    interval: 1,
+                    streak: 0,
+                    highlightedWord: word,
+                    created: now,
+                    lastReviewed: null
+                });
+                showNotification(`✅ Создана карточка с выделенным словом: "${word}"`);
+            } else {
+                // Обновляем существующую карточку
+                reviewCards[cardIndex].highlightedWord = word;
+                showNotification(`✅ Слово "${word}" выделено в карточке`);
+            }
+            
+            saveReviewCards();
+            saveAppState();
+            updateStats();
         }
 
         // ==================== ВКЛАДКИ ====================
@@ -941,7 +1286,12 @@
                     const tabId = this.getAttribute('data-tab');
                     document.getElementById(tabId).classList.add('active');
                     
-                    if (tabId === 'dictionary') updateDictionaryView();
+                    if (tabId === 'dictionary') {
+                        updateDictionaryView();
+                        updateStats();
+                    } else if (tabId === 'repeat') {
+                        updateStats();
+                    }
                 });
             });
         }
@@ -960,6 +1310,16 @@
                 const text = document.getElementById('selectedTextPreview').textContent;
                 if (text.trim()) {
                     showAddWordModalWithText(text.trim());
+                    hideSelectionPanel();
+                }
+            });
+            
+            document.getElementById('selectionHighlightBtn').addEventListener('click', function() {
+                const fullText = document.getElementById('selectedTextPreview').textContent;
+                const highlightedWord = prompt('Какое слово в этом предложении вы хотите выделить в карточке?', 
+                                            fullText.split(' ')[0] || '');
+                if (highlightedWord && highlightedWord.trim()) {
+                    highlightWordInDictionary(highlightedWord.trim(), fullText.trim());
                     hideSelectionPanel();
                 }
             });
@@ -1028,24 +1388,9 @@
             const cancelBtn = document.getElementById('modalCancelBtn');
             const saveBtn = document.getElementById('modalSaveBtn');
             
-            // Сохраняем состояние модального окна при закрытии
-            window.addEventListener('beforeunload', function() {
-                if (modal.style.display === 'flex') {
-                    const state = {
-                        visible: true,
-                        hindiText: document.getElementById('modalHindiInput').value,
-                        translation: document.getElementById('modalTranslationInput').value
-                    };
-                    localStorage.setItem('hindiModalState', JSON.stringify(state));
-                } else {
-                    localStorage.removeItem('hindiModalState');
-                }
-            });
-            
             // Кнопка отмены
             cancelBtn.addEventListener('click', function() {
                 modal.style.display = 'none';
-                localStorage.removeItem('hindiModalState');
                 currentEditingWord = null;
             });
             
@@ -1075,20 +1420,46 @@
                 updateDictionaryView();
                 
                 modal.style.display = 'none';
-                localStorage.removeItem('hindiModalState');
                 currentEditingWord = null;
                 
                 showNotification(`✅ "${hindiText.length > 20 ? hindiText.substring(0, 20) + '...' : hindiText}" ${currentEditingWord ? 'обновлено' : 'добавлено'}`);
+                
+                // Создаем карточку если ее нет
+                createCardIfNotExists(hindiText, translation);
             });
             
             // Закрытие по клику на оверлей
             modal.addEventListener('click', function(event) {
                 if (event.target === modal) {
                     modal.style.display = 'none';
-                    localStorage.removeItem('hindiModalState');
                     currentEditingWord = null;
                 }
             });
+        }
+
+        function createCardIfNotExists(front, back) {
+            const exists = reviewCards.find(card => 
+                card.front === front && card.back === back
+            );
+            
+            if (!exists) {
+                const now = Date.now();
+                reviewCards.push({
+                    front: front,
+                    back: back,
+                    direction: cardDirection,
+                    tags: [],
+                    difficulty: "new",
+                    nextReview: now,
+                    interval: 1,
+                    streak: 0,
+                    highlightedWord: "",
+                    created: now,
+                    lastReviewed: null
+                });
+                saveReviewCards();
+                updateStats();
+            }
         }
 
         function showAddWordModal() {
@@ -1109,7 +1480,6 @@
             document.getElementById('addWordModal').style.display = 'flex';
             currentEditingWord = null;
             
-            // Автофокус на поле перевода
             setTimeout(() => {
                 document.getElementById('modalTranslationInput').focus();
             }, 100);
@@ -1129,7 +1499,6 @@
             document.getElementById('addWordModal').style.display = 'flex';
             currentEditingWord = word;
             
-            // Автофокус на поле перевода
             setTimeout(() => {
                 document.getElementById('modalTranslationInput').focus();
             }, 100);
@@ -1141,7 +1510,6 @@
                 const file = event.target.files[0];
                 if (!file) return;
                 
-                // ПРОВЕРКА РАЗМЕРА (макс 100KB)
                 if (file.size > 100 * 1024) {
                     showNotification('⚠️ Файл слишком большой. Выберите до 100KB.');
                     this.value = '';
@@ -1164,13 +1532,11 @@
             const textDisplay = document.getElementById('textDisplay');
             textDisplay.innerHTML = '';
             
-            // ОГРАНИЧИВАЕМ текст
             if (text.length > 30000) {
                 text = text.substring(0, 30000);
                 showNotification('📝 Текст обрезан до 30К символов');
             }
             
-            // Парсим SRT
             if (text.includes('-->')) {
                 text = text.split('\n')
                     .filter(line => {
@@ -1180,10 +1546,8 @@
                     .join(' ');
             }
             
-            // Сохраняем
             currentText = text;
             
-            // Отображаем
             const words = text.split(/(\s+)/);
             let currentLine = document.createElement('div');
             currentLine.style.marginBottom = '8px';
@@ -1204,16 +1568,13 @@
                 span.onclick = function(e) {
                     e.stopPropagation();
                     
-                    // Снимаем выделение
                     document.querySelectorAll('.hindi-word.selected').forEach(w => {
                         w.classList.remove('selected');
                     });
                     
-                    // Выделяем текущее
                     this.classList.add('selected');
                     selectedWord = cleanWord;
                     
-                    // Показываем перевод
                     showWordTranslation(cleanWord);
                 };
                 
@@ -1223,11 +1584,73 @@
             
             textDisplay.appendChild(currentLine);
             
-            // СОХРАНЯЕМ СРАЗУ ПОСЛЕ ЗАГРУЗКИ
             saveAppState();
         }
 
-        // ==================== ОЧИСТКА ТЕКСТА ====================
+        function displaySavedText(text) {
+            const textDisplay = document.getElementById('textDisplay');
+            if (!textDisplay) return;
+            
+            textDisplay.innerHTML = '';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'saved-text-content';
+            contentDiv.style.cssText = `
+                font-size: 16px;
+                line-height: 1.4;
+                font-family: 'Georgia', serif;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            `;
+            
+            const lines = text.split('\n');
+            
+            lines.forEach(line => {
+                if (line.trim().length === 0) {
+                    contentDiv.appendChild(document.createElement('br'));
+                    return;
+                }
+                
+                const words = line.split(/(\s+)/);
+                const lineDiv = document.createElement('div');
+                lineDiv.style.marginBottom = '8px';
+                
+                words.forEach(word => {
+                    if (word.trim().length === 0) {
+                        lineDiv.appendChild(document.createTextNode(' '));
+                        return;
+                    }
+                    
+                    const cleanWord = word.replace(/[.,;:!?"'()\[\]{}]/g, '');
+                    
+                    const span = document.createElement('span');
+                    span.className = 'hindi-word';
+                    span.textContent = word;
+                    span.dataset.word = cleanWord;
+                    
+                    span.onclick = function(e) {
+                        e.stopPropagation();
+                        
+                        document.querySelectorAll('.hindi-word.selected').forEach(w => {
+                            w.classList.remove('selected');
+                        });
+                        
+                        this.classList.add('selected');
+                        selectedWord = cleanWord;
+                        
+                        showWordTranslation(cleanWord);
+                    };
+                    
+                    lineDiv.appendChild(span);
+                    lineDiv.appendChild(document.createTextNode(' '));
+                });
+                
+                contentDiv.appendChild(lineDiv);
+            });
+            
+            textDisplay.appendChild(contentDiv);
+        }
+
         function clearCurrentText() {
             if (confirm('Очистить текущий текст? Словарь останется нетронутым.')) {
                 currentText = '';
@@ -1251,18 +1674,22 @@
         function showWordTranslation(word) {
             let translation = myDictionary[word] || baseDictionary[word];
             document.getElementById('translationText').innerHTML = `
-                <div style="font-size: 1.2rem;">${word}</div>
-                <div style="font-size: 1.6rem; margin-top: 5px;">${translation || '❌ Не знаю'}</div>
+                <div style="font-size: 1.2rem;">${escapeHtml(word)}</div>
+                <div style="font-size: 1.6rem; margin-top: 5px;">${escapeHtml(translation || '❌ Не знаю')}</div>
             `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function addToDictionary() {
             if (selectedText) {
-                // Если есть выделенный текст, добавляем его
                 showAddWordModalWithText(selectedText);
                 selectedText = '';
             } else if (selectedWord) {
-                // Иначе добавляем выбранное слово
                 const translation = myDictionary[selectedWord] || baseDictionary[selectedWord] || '';
                 showAddWordModalWithText(selectedWord, translation);
             } else {
@@ -1281,15 +1708,19 @@
             const wordPreview = word.length > 20 ? word.substring(0, 20) + '...' : word;
             
             if (confirm(`Удалить слово из словаря?\n\n"${wordPreview}"\n→ ${translation}`)) {
-                // Удаляем из словаря
                 delete myDictionary[word];
                 
-                // Сохраняем изменения
+                // Также удаляем связанные карточки
+                reviewCards = reviewCards.filter(card => 
+                    !(card.front === word && card.back === translation)
+                );
+                
                 saveUserDictionary();
+                saveReviewCards();
                 saveAppState();
                 
-                // Обновляем отображение
                 updateDictionaryView();
+                updateStats();
                 
                 showNotification(`🗑️ Слово удалено: ${wordPreview}`);
             }
@@ -1340,6 +1771,7 @@
             const words = Object.keys(myDictionary);
             
             document.getElementById('totalWordsStat').textContent = words.length;
+            updateStats();
             
             list.innerHTML = '';
             
@@ -1352,29 +1784,53 @@
                 const item = document.createElement('div');
                 item.className = 'dictionary-item';
                 
-                const isLongText = word.length > 30 || myDictionary[word].length > 30;
+                const translation = myDictionary[word];
+                const isLongText = word.length > 30 || translation.length > 30;
                 
-                item.innerHTML = `
-                    <div class="dictionary-text">
-                        <div class="dictionary-word" style="font-size: ${isLongText ? '0.9rem' : '1rem'}">
-                            ${word}
-                        </div>
-                        <div class="dictionary-translation" style="font-size: ${isLongText ? '0.85rem' : '0.95rem'}">
-                            ${myDictionary[word]}
-                        </div>
-                    </div>
-                    <div class="dictionary-actions">
-                        <button onclick="speakText('${word.replace(/'/g, "\\'")}')" class="dict-btn speak-btn" title="Озвучить">
-                            🔊
-                        </button>
-                        <button onclick="editWordInDictionary('${word.replace(/'/g, "\\'")}')" class="dict-btn edit-btn" title="Редактировать">
-                            ✏️
-                        </button>
-                        <button onclick="removeWordFromDictionary('${word.replace(/'/g, "\\'")}')" class="dict-btn delete-btn" title="Удалить">
-                            🗑️
-                        </button>
-                    </div>
-                `;
+                // Безопасное создание HTML
+                const textDiv = document.createElement('div');
+                textDiv.className = 'dictionary-text';
+                
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'dictionary-word';
+                wordDiv.style.fontSize = isLongText ? '0.9rem' : '1rem';
+                wordDiv.textContent = word;
+                
+                const transDiv = document.createElement('div');
+                transDiv.className = 'dictionary-translation';
+                transDiv.style.fontSize = isLongText ? '0.85rem' : '0.95rem';
+                transDiv.textContent = translation;
+                
+                textDiv.appendChild(wordDiv);
+                textDiv.appendChild(transDiv);
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'dictionary-actions';
+                
+                const speakBtn = document.createElement('button');
+                speakBtn.className = 'dict-btn speak-btn';
+                speakBtn.title = 'Озвучить';
+                speakBtn.textContent = '🔊';
+                speakBtn.onclick = () => speakText(word);
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'dict-btn edit-btn';
+                editBtn.title = 'Редактировать';
+                editBtn.textContent = '✏️';
+                editBtn.onclick = () => editWordInDictionary(word);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'dict-btn delete-btn';
+                deleteBtn.title = 'Удалить';
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.onclick = () => removeWordFromDictionary(word);
+                
+                actionsDiv.appendChild(speakBtn);
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(deleteBtn);
+                
+                item.appendChild(textDiv);
+                item.appendChild(actionsDiv);
                 
                 list.appendChild(item);
             });
@@ -1401,77 +1857,91 @@
                 confirm('Точно удалить ВСЕ слова?')) {
                 
                 myDictionary = {};
+                reviewCards = [];
                 saveUserDictionary();
+                saveReviewCards();
                 saveAppState();
                 updateDictionaryView();
+                updateStats();
                 
                 showNotification('🗑️ Весь словарь очищен');
             }
         }
 
-        // ==================== КАРТОЧКИ ПОВТОРЕНИЯ ====================
-        function startReview() {
-            const words = Object.keys(myDictionary);
-            if (words.length === 0) {
-                showNotification('⚠️ Словарь пуст');
+        // ==================== СТАТИСТИКА ====================
+        function updateStats() {
+            const now = Date.now();
+            const dueCount = reviewCards.filter(c => !c.nextReview || c.nextReview <= now).length;
+            const totalCards = reviewCards.length;
+            const newCount = reviewCards.filter(c => c.difficulty === "new" || !c.difficulty).length;
+            const easyCount = reviewCards.filter(c => c.difficulty === "easy").length;
+            const hardCount = reviewCards.filter(c => c.difficulty === "hard").length;
+            
+            document.getElementById('cardsCountStat').textContent = totalCards;
+            document.getElementById('dueCardsStat').textContent = dueCount;
+            
+            document.getElementById('statsText').innerHTML = 
+                `${dueCount} готово | ${newCount} новых | ${easyCount} легко | ${hardCount} сложно | ${totalCards} всего`;
+        }
+
+        function showStatistics() {
+            const now = Date.now();
+            const totalCards = reviewCards.length;
+            const dueCards = reviewCards.filter(c => !c.nextReview || c.nextReview <= now).length;
+            const newCards = reviewCards.filter(c => c.difficulty === "new" || !c.difficulty).length;
+            const easyCards = reviewCards.filter(c => c.difficulty === "easy").length;
+            const hardCards = reviewCards.filter(c => c.difficulty === "hard").length;
+            
+            // Следующие повторения
+            const nextReviews = reviewCards
+                .filter(c => c.nextReview && c.nextReview > now)
+                .sort((a, b) => a.nextReview - b.nextReview)
+                .slice(0, 5);
+            
+            let nextReviewsText = '';
+            if (nextReviews.length > 0) {
+                nextReviewsText = '\n\n📅 Ближайшие повторения:\n';
+                nextReviews.forEach(card => {
+                    const days = Math.ceil((card.nextReview - now) / (1000 * 60 * 60 * 24));
+                    nextReviewsText += `• Через ${days} дн.: ${card.front.substring(0, 30)}${card.front.length > 30 ? '...' : ''}\n`;
+                });
+            }
+            
+            alert(`📊 СТАТИСТИКА:
+
+📚 Всего карточек: ${totalCards}
+⏰ Готово к повторению: ${dueCards}
+🆕 Новых: ${newCards}
+😊 Легких: ${easyCards}
+⚠️ Сложных: ${hardCards}
+
+🎯 Эффективность: ${totalCards > 0 ? Math.round((easyCards / totalCards) * 100) : 0}%${nextReviewsText}
+            `);
+        }
+
+        function showCardInfo() {
+            if (currentCardIndex >= currentReviewSession.length || currentReviewSession.length === 0) {
+                showNotification('ℹ️ Нет активной карточки');
                 return;
             }
             
-            reviewCards = words.map(word => ({ 
-                word: word, 
-                translation: myDictionary[word] 
-            }));
+            const card = currentReviewSession[currentCardIndex];
+            const now = Date.now();
+            const daysLeft = card.nextReview ? Math.ceil((card.nextReview - now) / (1000 * 60 * 60 * 24)) : 0;
+            const direction = card.direction === 'hi-ru' ? 'Хинди → Русский' : 'Русский → Хинди';
+            const hasHighlight = card.highlightedWord && card.highlightedWord.trim() !== '';
             
-            // Перемешиваем карточки
-            for (let i = reviewCards.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [reviewCards[i], reviewCards[j]] = [reviewCards[j], reviewCards[i]];
-            }
-            
-            currentCardIndex = 0;
-            showCard();
-        }
+            alert(`ℹ️ ИНФОРМАЦИЯ О КАРТОЧКЕ:
 
-        function showCard() {
-            if (currentCardIndex >= reviewCards.length) {
-                document.getElementById('cardContent').textContent = '🎉 Все карточки пройдены!';
-                document.getElementById('cardAnswer').textContent = '';
-                document.getElementById('cardAnswer').classList.remove('show');
-                return;
-            }
-            
-            const card = reviewCards[currentCardIndex];
-            document.getElementById('cardContent').textContent = card.word;
-            document.getElementById('cardAnswer').textContent = card.translation;
-            document.getElementById('cardAnswer').classList.remove('show');
-            
-            // Адаптивный размер шрифта для длинного текста
-            const isLongText = card.word.length > 30 || card.translation.length > 30;
-            document.getElementById('cardContent').style.fontSize = isLongText ? '1.5rem' : '2rem';
-            document.getElementById('cardAnswer').style.fontSize = isLongText ? '1.3rem' : '1.6rem';
-        }
-
-        function toggleCardAnswer() {
-            const answer = document.getElementById('cardAnswer');
-            answer.classList.toggle('show');
-        }
-
-        function rateCard(difficulty) {
-            if (currentCardIndex >= reviewCards.length) return;
-            
-            currentCardIndex++;
-            showCard();
-            showNotification(difficulty === 'easy' ? '✅ Легко' : '⚠️ Сложно');
-            
-            // Автосохранение прогресса
-            saveAppState();
-        }
-
-        function speakCurrentCard() {
-            if (currentCardIndex < reviewCards.length) {
-                const card = reviewCards[currentCardIndex];
-                speakText(card.word);
-            }
+🎯 Сторона А: ${card.front}
+🎯 Сторона Б: ${card.back}
+🔄 Направление: ${direction}
+📊 Сложность: ${card.difficulty || 'новая'}
+🔥 Серия: ${card.streak || 0} подряд
+⏰ Интервал: ${card.interval || 1} дней
+📅 Следующий показ: ${daysLeft > 0 ? `через ${daysLeft} дней` : 'готово к повторению'}
+${hasHighlight ? `🔍 Выделенное слово: "${card.highlightedWord}"` : ''}
+            `);
         }
 
         // ==================== ОЗВУЧКА ====================
@@ -1487,7 +1957,6 @@
                 utterance.rate = 0.8;
                 utterance.volume = 1;
                 
-                // Пытаемся найти голос хинди
                 const voices = speechSynthesis.getVoices();
                 const hindiVoice = voices.find(voice => 
                     voice.lang.includes('hi') || 
@@ -1497,10 +1966,6 @@
                 if (hindiVoice) {
                     utterance.voice = hindiVoice;
                 }
-                
-                utterance.onstart = function() {
-                    console.log('Начало озвучки:', text);
-                };
                 
                 utterance.onerror = function(event) {
                     console.error('Ошибка озвучки:', event);
@@ -1520,6 +1985,16 @@
                 speakText(selectedWord);
             } else {
                 showNotification('⚠️ Выберите слово или выделите текст');
+            }
+        }
+
+        function speakCurrentCard() {
+            if (currentCardIndex < currentReviewSession.length) {
+                const card = currentReviewSession[currentCardIndex];
+                const text = card.direction === 'hi-ru' ? card.front : card.back;
+                speakText(text);
+            } else {
+                showNotification('⚠️ Нет активной карточки');
             }
         }
 
@@ -1546,9 +2021,85 @@
             showNotification('📝 Пример загружен и сохранён');
         };
 
+        // ==================== АВТОСОХРАНЕНИЕ ====================
+        function saveAppState() {
+            const state = {
+                dictionary: myDictionary,
+                reviewCards: reviewCards,
+                currentCardIndex: currentCardIndex,
+                cardDirection: cardDirection,
+                reviewMode: reviewMode,
+                lastSave: new Date().toISOString(),
+                currentText: currentText,
+                scrollPosition: document.getElementById('textDisplay')?.scrollTop || 0
+            };
+            localStorage.setItem('hindiAppState', JSON.stringify(state));
+        }
+
+        function loadAppState() {
+            try {
+                const savedState = localStorage.getItem('hindiAppState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    
+                    myDictionary = state.dictionary || {};
+                    
+                    if (state.reviewCards) {
+                        reviewCards = state.reviewCards;
+                    }
+                    
+                    if (state.cardDirection) {
+                        cardDirection = state.cardDirection;
+                    }
+                    
+                    if (state.reviewMode) {
+                        reviewMode = state.reviewMode;
+                    }
+                    
+                    if (state.currentText) {
+                        currentText = state.currentText;
+                        displaySavedText(currentText);
+                        
+                        setTimeout(() => {
+                            const textDisplay = document.getElementById('textDisplay');
+                            if (textDisplay && state.scrollPosition) {
+                                textDisplay.scrollTop = state.scrollPosition;
+                            }
+                        }, 100);
+                    }
+                    
+                    console.log('✅ Состояние восстановлено');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                myDictionary = {};
+                reviewCards = [];
+            }
+        }
+
+        function setupAutoSave() {
+            setInterval(saveAppState, 10000);
+            
+            window.addEventListener('beforeunload', saveAppState);
+            
+            const textDisplay = document.getElementById('textDisplay');
+            if (textDisplay) {
+                let scrollTimeout;
+                textDisplay.addEventListener('scroll', function() {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(saveAppState, 1000);
+                });
+            }
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setTimeout(saveAppState, 100);
+                });
+            });
+        }
+
         // ==================== УТИЛИТЫ ====================
         function showNotification(message) {
-            // Удаляем старые уведомления
             document.querySelectorAll('.notification').forEach(n => n.remove());
             
             const notification = document.createElement('div');
