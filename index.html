@@ -801,10 +801,10 @@
     <h3 style="color: #6a11cb; margin-bottom: 10px;">
         🔄 Повторение слов 
         <span id="sessionProgress" style="font-size: 0.8em; color: #666;">(0/0)</span>
-    </h3></div>
+    </h3>
             
             <!-- РЕЖИМЫ ПОВТОРЕНИЯ -->
-            <div class="mode-selector">
+<div class="mode-selector">
         <button onclick="startReviewSession('due')" class="mode-btn" id="modeDue">
             📅 Готовые к повторению
         </button>
@@ -869,7 +869,7 @@
     </div>
             
             <!-- СТАТИСТИКА -->
-            <div class="stats-panel">
+            div class="stats-panel">
         <div class="stats-header">
             <div>
                 <strong>📊 Статистика:</strong>
@@ -2149,6 +2149,74 @@
                 }
             }, 3000);
         }
+
+        // ==================== ОБНОВЛЕННЫЕ ФУНКЦИИ ПОВТОРЕНИЯ ====================
+function startReviewSession(mode = "due") {
+    console.log(`🚀 Начало сессии в режиме: ${mode}`);
+    
+    // Обновляем режим и кнопки
+    reviewMode = mode;
+    updateModeButtons();
+    
+    // Показываем кнопки оценки
+    const ratingButtons = document.getElementById('ratingButtons');
+    const additionalButtons = document.getElementById('additionalButtons');
+    if (ratingButtons) ratingButtons.style.display = 'flex';
+    if (additionalButtons) additionalButtons.style.display = 'flex';
+    
+    // Запускаем повторение
+    startReview(mode);
+}
+
+function updateModeButtons() {
+    const modeDue = document.getElementById('modeDue');
+    const modeNew = document.getElementById('modeNew');
+    const modeAll = document.getElementById('modeAll');
+    
+    if (modeDue && modeNew && modeAll) {
+        modeDue.classList.remove('active');
+        modeNew.classList.remove('active');
+        modeAll.classList.remove('active');
+        
+        const activeBtn = document.getElementById(`mode${reviewMode.charAt(0).toUpperCase() + reviewMode.slice(1)}`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+    }
+}
+
+// Обновите функцию showCard() чтобы скрывать кнопки когда сессия завершена:
+function showCard() {
+    if (!currentReviewSession || currentCardIndex >= currentReviewSession.length) {
+        const cardContent = document.getElementById('cardContent');
+        const cardAnswer = document.getElementById('cardAnswer');
+        const ratingButtons = document.getElementById('ratingButtons');
+        const additionalButtons = document.getElementById('additionalButtons');
+        
+        if (cardContent) cardContent.textContent = '🎉 Сессия завершена!';
+        if (cardAnswer) {
+            cardAnswer.textContent = 'Выберите режим для новой сессии';
+            cardAnswer.classList.remove('show');
+        }
+        
+        // Скрываем кнопки оценки
+        if (ratingButtons) ratingButtons.style.display = 'none';
+        if (additionalButtons) additionalButtons.style.display = 'none';
+        
+        updateSessionProgress(0, 0);
+        
+        setTimeout(() => {
+            const now = Date.now();
+            const dueCount = reviewCards.filter(c => c && (!c.nextReview || c.nextReview <= now)).length;
+            showNotification(`✅ Сессия завершена! Готовых карточек: ${dueCount}`);
+            updateStats();
+        }, 500);
+        
+        return;
+    }
+    
+    // ... остальной код функции showCard() ...
+}
     </script>
 </body>
 </html>
