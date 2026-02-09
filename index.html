@@ -551,6 +551,31 @@
             color: white;
         }
 
+        /* КНОПКА СТАРТ */
+        .start-review-btn {
+            background: #00b09b;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            margin: 15px auto;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .start-review-btn:hover {
+            transform: translateY(-2px);
+            background: #009688;
+        }
+
         /* УВЕДОМЛЕНИЯ */
         .notification {
             position: fixed;
@@ -771,8 +796,8 @@
             <h3 style="color: #6a11cb; margin-bottom: 15px;">📚 Мой словарь</h3>
             
             <div class="stats-panel">
-                <span class="stats-item">Всего: <span id="totalWordsStat" class="stats-value">0</span></span>
-                <span class="stats-item">В карточках: <span id="cardsCountStat" class="stats-value">0</span></span>
+                <span class="stats-item">Всего слов: <span id="totalWordsStat" class="stats-value">0</span></span>
+                <span class="stats-item">Карточек: <span id="cardsCountStat" class="stats-value">0</span></span>
                 <span class="stats-item">Готово к повторению: <span id="dueCardsStat" class="stats-value">0</span></span>
             </div>
 
@@ -798,92 +823,104 @@
 
         <!-- ВКЛАДКА 3: ПОВТОРЕНИЕ -->
         <div id="repeat" class="tab-content">
-    <h3 style="color: #6a11cb; margin-bottom: 10px;">
-        🔄 Повторение слов 
-        <span id="sessionProgress" style="font-size: 0.8em; color: #666;">(0/0)</span>
-    </h3>
+            <h3 style="color: #6a11cb; margin-bottom: 10px;">
+                🔄 Повторение слов 
+                <span id="sessionProgress" style="font-size: 0.8em; color: #666;">(выберите режим)</span>
+            </h3>
             
             <!-- РЕЖИМЫ ПОВТОРЕНИЯ -->
-<div class="mode-selector">
-        <button onclick="startReviewSession('due')" class="mode-btn" id="modeDue">
-            📅 Готовые к повторению
-        </button>
-        <button onclick="startReviewSession('new')" class="mode-btn" id="modeNew">
-            🆕 Только новые
-        </button>
-        <button onclick="startReviewSession('all')" class="mode-btn" id="modeAll">
-            📚 Все карточки
-        </button>
-    </div>
+            <div class="mode-selector">
+                <button onclick="selectReviewMode('due')" class="mode-btn" id="modeDue">
+                    📅 Готовые к повторению
+                </button>
+                <button onclick="selectReviewMode('new')" class="mode-btn" id="modeNew">
+                    🆕 Только новые
+                </button>
+                <button onclick="selectReviewMode('all')" class="mode-btn" id="modeAll">
+                    📚 Все карточки
+                </button>
+            </div>
+            
+            <!-- КНОПКА НАЧАТЬ -->
+            <div style="text-align: center; margin: 20px 0;">
+                <button onclick="startSelectedReview()" id="startReviewBtn" 
+                        class="start-review-btn" 
+                        style="display: none;">
+                    ▶️ Начать повторение
+                </button>
+                <p id="selectedModeText" style="color: #666; margin-top: 10px; font-size: 14px; min-height: 40px;">
+                    Выберите режим повторения выше
+                </p>
+            </div>
             
             <!-- ВЫБОР НАПРАВЛЕНИЯ -->
             <div style="margin: 15px 0;">
-        <p style="color: #666; margin-bottom: 8px; font-size: 14px;">Направление карточек:</p>
-        <div class="direction-selector">
-            <button onclick="setCardDirection('hi-ru')" class="direction-btn" id="dirHiRu">
-                🇮🇳 Хинди → Русский 🇷🇺
-            </button>
-            <button onclick="setCardDirection('ru-hi')" class="direction-btn" id="dirRuHi">
-                🇷🇺 Русский → Хинди 🇮🇳
-            </button>
-        </div>
-    </div>
+                <p style="color: #666; margin-bottom: 8px; font-size: 14px;">Направление карточек:</p>
+                <div class="direction-selector">
+                    <button onclick="setCardDirection('hi-ru')" class="direction-btn" id="dirHiRu">
+                        🇮🇳 Хинди → Русский 🇷🇺
+                    </button>
+                    <button onclick="setCardDirection('ru-hi')" class="direction-btn" id="dirRuHi">
+                        🇷🇺 Русский → Хинди 🇮🇳
+                    </button>
+                </div>
+            </div>
 
             <!-- КАРТОЧКА -->
             <div id="flashcard" class="flashcard-container" onclick="toggleCardAnswer()">
-        <div id="cardContent" class="flashcard-content">
-            Выберите режим повторения выше ↓
-        </div>
-        <div id="cardAnswer" class="flashcard-answer">
-            <!-- Перевод будет здесь -->
-        </div>
-    </div>
+                <div id="cardContent" class="flashcard-content">
+                    Выберите режим повторения
+                </div>
+                <div id="cardAnswer" class="flashcard-answer">
+                    <!-- Перевод будет здесь -->
+                </div>
+            </div>
 
-            <!-- КНОПКИ ОЦЕНКИ -->
+            <!-- КНОПКИ ОЦЕНКИ (появятся только во время сессии) -->
             <div id="ratingButtons" class="action-buttons" style="display: none;">
-        <button onclick="rateCard('again')" class="action-btn" style="background: #ff4444; color: white;">
-            🔴 Снова
-        </button>
-        <button onclick="rateCard('hard')" class="action-btn" style="background: #ff9800; color: white;">
-            🟠 Сложно
-        </button>
-        <button onclick="rateCard('good')" class="action-btn" style="background: #2196f3; color: white;">
-            🔵 Нормально
-        </button>
-        <button onclick="rateCard('easy')" class="action-btn" style="background: #4caf50; color: white;">
-            🟢 Легко
-        </button>
-    </div>
+                <button onclick="rateCard('again')" class="action-btn" style="background: #ff4444; color: white;">
+                    🔴 Снова
+                </button>
+                <button onclick="rateCard('hard')" class="action-btn" style="background: #ff9800; color: white;">
+                    🟠 Сложно
+                </button>
+                <button onclick="rateCard('good')" class="action-btn" style="background: #2196f3; color: white;">
+                    🔵 Нормально
+                </button>
+                <button onclick="rateCard('easy')" class="action-btn" style="background: #4caf50; color: white;">
+                    🟢 Легко
+                </button>
+            </div>
             
             <!-- ДОПОЛНИТЕЛЬНЫЕ КНОПКИ -->
             <div id="additionalButtons" class="action-buttons" style="margin-top: 10px; display: none;">
-        <button onclick="toggleCardAnswer()" class="action-btn" style="background: #9c27b0; color: white;">
-            📖 Показать/скрыть ответ
-        </button>
-        <button onclick="speakCurrentCard()" class="action-btn" style="background: #6a11cb; color: white;">
-            🔊 Озвучить
-        </button>
-        <button onclick="showCardInfo()" class="action-btn" style="background: #607d8b; color: white;">
-            ℹ️ Инфо
-        </button>
-    </div>
+                <button onclick="toggleCardAnswer()" class="action-btn" style="background: #9c27b0; color: white;">
+                    📖 Показать/скрыть ответ
+                </button>
+                <button onclick="speakCurrentCard()" class="action-btn" style="background: #6a11cb; color: white;">
+                    🔊 Озвучить
+                </button>
+                <button onclick="showCardInfo()" class="action-btn" style="background: #607d8b; color: white;">
+                    ℹ️ Инфо
+                </button>
+            </div>
             
             <!-- СТАТИСТИКА -->
-            div class="stats-panel">
-        <div class="stats-header">
-            <div>
-                <strong>📊 Статистика:</strong>
-                <span id="statsText">Выберите режим повторения</span>
+            <div class="stats-panel">
+                <div class="stats-header">
+                    <div>
+                        <strong>📊 Статистика:</strong>
+                        <span id="statsText">Загружаем...</span>
+                    </div>
+                    <button onclick="toggleStats()" class="stats-toggle">
+                        📈 Детали
+                    </button>
+                </div>
+                <div id="statsDetails" class="stats-details">
+                    <!-- Детальная статистика будет здесь -->
+                </div>
             </div>
-            <button onclick="toggleStats()" class="stats-toggle">
-                📈 Детали
-            </button>
         </div>
-        <div id="statsDetails" class="stats-details">
-            <!-- Детальная статистика будет здесь -->
-        </div>
-    </div>
-</div>
 
         <!-- ФУТЕР -->
         <footer style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #f0f0f0; color: #666; font-size: 0.9rem;">
@@ -904,7 +941,7 @@
         let selectionPanelVisible = false;
         let currentEditingWord = null;
         let cardDirection = "hi-ru";
-        let reviewMode = "due";
+        let reviewMode = null;
         let currentReviewSession = [];
         let statsExpanded = false;
 
@@ -953,7 +990,6 @@
             
             updateDictionaryView();
             updateDirectionButtons();
-            updateModeButtons();
             updateStats();
             
             setupAutoSave();
@@ -964,27 +1000,13 @@
         function initTabs() {
             document.querySelectorAll('.tab-btn').forEach(button => {
                 button.addEventListener('click', function() {
-                    // Удаляем active со всех кнопок
-                    document.querySelectorAll('.tab-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
                     
-                    // Удаляем active со всех контентов
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    
-                    // Добавляем active текущей кнопке
                     this.classList.add('active');
-                    
-                    // Показываем соответствующий контент
                     const tabId = this.getAttribute('data-tab');
-                    const tabContent = document.getElementById(tabId);
-                    if (tabContent) {
-                        tabContent.classList.add('active');
-                    }
+                    document.getElementById(tabId).classList.add('active');
                     
-                    // Обновляем данные если нужно
                     if (tabId === 'dictionary') {
                         updateDictionaryView();
                         updateStats();
@@ -1017,8 +1039,7 @@
             
             document.getElementById('selectionHighlightBtn').addEventListener('click', function() {
                 const fullText = document.getElementById('selectedTextPreview').textContent;
-                const highlightedWord = prompt('Какое слово в этом предложении вы хотите выделить в карточке?', 
-                                            fullText.split(' ')[0] || '');
+                const highlightedWord = prompt('Какое слово в этом предложении вы хотите выделить в карточке?', fullText.split(' ')[0] || '');
                 if (highlightedWord && highlightedWord.trim()) {
                     highlightWordInDictionary(highlightedWord.trim(), fullText.trim());
                     hideSelectionPanel();
@@ -1077,9 +1098,7 @@
 
         function hideSelectionPanel() {
             const panel = document.getElementById('selectionPanel');
-            if (panel) {
-                panel.style.display = 'none';
-            }
+            if (panel) panel.style.display = 'none';
             selectionPanelVisible = false;
             window.getSelection().removeAllRanges();
         }
@@ -1640,14 +1659,68 @@
             updateStats();
         }
 
-        // ==================== ФУНКЦИИ ПОВТОРЕНИЯ ====================
-        function startReview(mode = "due") {
+        // ==================== УПРАВЛЕНИЕ РЕЖИМАМИ ПОВТОРЕНИЯ ====================
+        function selectReviewMode(mode) {
             reviewMode = mode;
-            updateModeButtons();
             
+            // Обновляем кнопки
+            const modeDue = document.getElementById('modeDue');
+            const modeNew = document.getElementById('modeNew');
+            const modeAll = document.getElementById('modeAll');
+            
+            if (modeDue && modeNew && modeAll) {
+                modeDue.classList.remove('active');
+                modeNew.classList.remove('active');
+                modeAll.classList.remove('active');
+                
+                if (mode === 'due') modeDue.classList.add('active');
+                else if (mode === 'new') modeNew.classList.add('active');
+                else if (mode === 'all') modeAll.classList.add('active');
+            }
+            
+            // Показываем кнопку "Начать"
+            const startBtn = document.getElementById('startReviewBtn');
+            if (startBtn) startBtn.style.display = 'block';
+            
+            // Обновляем текст
+            const modeText = document.getElementById('selectedModeText');
+            if (modeText) {
+                const modeNames = {
+                    'due': '📅 Готовые к повторению',
+                    'new': '🆕 Только новые',
+                    'all': '📚 Все карточки'
+                };
+                modeText.innerHTML = `Выбран режим: <strong>${modeNames[mode]}</strong><br>Нажмите "Начать повторение"`;
+            }
+            
+            showNotification(`✅ Выбран режим: ${mode === 'due' ? 'Готовые к повторению' : mode === 'new' ? 'Только новые' : 'Все карточки'}`);
+        }
+
+        function startSelectedReview() {
+            if (!reviewMode) {
+                showNotification('⚠️ Сначала выберите режим повторения');
+                return;
+            }
+            
+            // Прячем кнопку "Начать"
+            const startBtn = document.getElementById('startReviewBtn');
+            if (startBtn) startBtn.style.display = 'none';
+            
+            // Показываем кнопки оценки
+            const ratingButtons = document.getElementById('ratingButtons');
+            const additionalButtons = document.getElementById('additionalButtons');
+            if (ratingButtons) ratingButtons.style.display = 'flex';
+            if (additionalButtons) additionalButtons.style.display = 'flex';
+            
+            // Запускаем повторение
+            startReview(reviewMode);
+        }
+
+        function startReview(mode = "due") {
             let cardsToReview = [];
             const now = Date.now();
             
+            // Фильтруем карточки по режиму
             switch(mode) {
                 case "due":
                     cardsToReview = reviewCards.filter(card => 
@@ -1666,6 +1739,7 @@
                     break;
             }
             
+            // Если нет карточек, создаем из словаря
             if (cardsToReview.length === 0) {
                 createReviewCardsFromDictionary();
                 
@@ -1683,14 +1757,25 @@
                 const cardAnswer = document.getElementById('cardAnswer');
                 if (cardContent) cardContent.textContent = '🎉 Все карточки изучены!';
                 if (cardAnswer) {
-                    cardAnswer.textContent = 'Нажмите "Начать повторение" для новой сессии';
+                    cardAnswer.textContent = 'Выберите режим для новой сессии';
                     cardAnswer.classList.remove('show');
                 }
+                
+                // Показываем кнопку "Начать" снова
+                const startBtn = document.getElementById('startReviewBtn');
+                if (startBtn) startBtn.style.display = 'block';
+                
+                // Скрываем кнопки оценки
+                const ratingButtons = document.getElementById('ratingButtons');
+                const additionalButtons = document.getElementById('additionalButtons');
+                if (ratingButtons) ratingButtons.style.display = 'none';
+                if (additionalButtons) additionalButtons.style.display = 'none';
+                
                 updateSessionProgress(0, 0);
                 return;
             }
             
-            // Перемешиваем
+            // Перемешиваем карточки
             for (let i = cardsToReview.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [cardsToReview[i], cardsToReview[j]] = [cardsToReview[j], cardsToReview[i]];
@@ -1701,19 +1786,89 @@
             showCard();
             
             const dueCount = reviewCards.filter(c => c && (!c.nextReview || c.nextReview <= now)).length;
-            showNotification(`📚 Сессия начата: ${cardsToReview.length} карточек (${dueCount} готово)`);
+            showNotification(`📚 Сессия начата: ${cardsToReview.length} карточек`);
+        }
+
+        function createReviewCardsFromDictionary() {
+            const now = Date.now();
+            let createdCount = 0;
+            
+            Object.keys(myDictionary).forEach(word => {
+                const translation = myDictionary[word];
+                
+                const exists = reviewCards.find(card => 
+                    card && card.front === word && card.back === translation
+                );
+                
+                if (!exists) {
+                    reviewCards.push({
+                        front: word,
+                        back: translation,
+                        direction: cardDirection,
+                        tags: [],
+                        difficulty: "new",
+                        nextReview: now,
+                        interval: 1,
+                        streak: 0,
+                        highlightedWord: "",
+                        created: now,
+                        lastReviewed: null
+                    });
+                    createdCount++;
+                }
+            });
+            
+            if (createdCount > 0) {
+                saveReviewCards();
+                console.log(`✅ Создано ${createdCount} новых карточек из словаря`);
+            }
+            
+            updateStats();
         }
 
         function showCard() {
-            if (!currentReviewSession || currentCardIndex >= currentReviewSession.length) {
+            // Проверяем, есть ли активная сессия
+            if (!currentReviewSession || currentReviewSession.length === 0) {
+                const cardContent = document.getElementById('cardContent');
+                const cardAnswer = document.getElementById('cardAnswer');
+                if (cardContent) cardContent.textContent = 'Выберите режим повторения';
+                if (cardAnswer) {
+                    cardAnswer.textContent = '';
+                    cardAnswer.classList.remove('show');
+                }
+                updateSessionProgress(0, 0);
+                return;
+            }
+            
+            if (currentCardIndex >= currentReviewSession.length) {
+                // Сессия завершена
                 const cardContent = document.getElementById('cardContent');
                 const cardAnswer = document.getElementById('cardAnswer');
                 if (cardContent) cardContent.textContent = '🎉 Сессия завершена!';
                 if (cardAnswer) {
-                    cardAnswer.textContent = 'Нажмите "Начать повторение" для новой сессии';
+                    cardAnswer.textContent = 'Выберите режим для новой сессии';
                     cardAnswer.classList.remove('show');
                 }
+                
+                // Показываем кнопку "Начать" снова
+                const startBtn = document.getElementById('startReviewBtn');
+                if (startBtn) startBtn.style.display = 'block';
+                
+                // Скрываем кнопки оценки
+                const ratingButtons = document.getElementById('ratingButtons');
+                const additionalButtons = document.getElementById('additionalButtons');
+                if (ratingButtons) ratingButtons.style.display = 'none';
+                if (additionalButtons) additionalButtons.style.display = 'none';
+                
                 updateSessionProgress(0, 0);
+                
+                setTimeout(() => {
+                    const now = Date.now();
+                    const dueCount = reviewCards.filter(c => c && (!c.nextReview || c.nextReview <= now)).length;
+                    showNotification(`✅ Сессия завершена! Готовых карточек: ${dueCount}`);
+                    updateStats();
+                }, 500);
+                
                 return;
             }
             
@@ -1736,11 +1891,14 @@
                 backText = card.front;
             }
             
+            // Выделяем слово если есть
             if (card.highlightedWord && card.highlightedWord.trim() !== "") {
                 try {
                     const regex = new RegExp(`(${escapeRegExp(card.highlightedWord)})`, 'gi');
                     frontText = frontText.replace(regex, '<span style="background: #ffeb3b; padding: 2px 4px; border-radius: 3px; font-weight: bold;">$1</span>');
-                } catch (e) {}
+                } catch (e) {
+                    console.log('Ошибка выделения слова:', e);
+                }
             }
             
             const cardContent = document.getElementById('cardContent');
@@ -1752,6 +1910,7 @@
                 cardAnswer.classList.remove('show');
             }
             
+            // Адаптивный размер шрифта
             const isLongText = frontText.length > 30 || backText.length > 30;
             if (cardContent) cardContent.style.fontSize = isLongText ? '1.5rem' : '2rem';
             if (cardAnswer) cardAnswer.style.fontSize = isLongText ? '1.3rem' : '1.6rem';
@@ -1820,13 +1979,14 @@
 
         function rateCard(difficulty) {
             if (!currentReviewSession || currentCardIndex >= currentReviewSession.length) {
-                showNotification('ℹ️ Нет активной сессии. Начните повторение.');
+                showNotification('ℹ️ Нет активной сессии');
                 return;
             }
             
             const currentCard = currentReviewSession[currentCardIndex];
             if (!currentCard) return;
             
+            // Находим карточку в основном массиве
             const cardIndex = reviewCards.findIndex(card => 
                 card && card.front === currentCard.front && card.back === currentCard.back
             );
@@ -1840,6 +2000,7 @@
                 updateStats();
             }
             
+            // Сообщение
             const messages = {
                 'again': '🔄 Снова (через 1 день)',
                 'hard': '⚠️ Сложно (маленький интервал)',
@@ -1848,6 +2009,7 @@
             };
             showNotification(messages[difficulty] || '✅ Оценено');
             
+            // Следующая карточка
             currentCardIndex++;
             setTimeout(showCard, 300);
         }
@@ -1895,23 +2057,6 @@
             showNotification(`🔄 Направление: ${direction === 'hi-ru' ? 'Хинди → Русский' : 'Русский → Хинди'}`);
         }
 
-        function updateModeButtons() {
-            const modeDue = document.getElementById('modeDue');
-            const modeNew = document.getElementById('modeNew');
-            const modeAll = document.getElementById('modeAll');
-            
-            if (modeDue && modeNew && modeAll) {
-                modeDue.classList.remove('active');
-                modeNew.classList.remove('active');
-                modeAll.classList.remove('active');
-                
-                const activeBtn = document.getElementById(`mode${reviewMode.charAt(0).toUpperCase() + reviewMode.slice(1)}`);
-                if (activeBtn) {
-                    activeBtn.classList.add('active');
-                }
-            }
-        }
-
         function speakCurrentCard() {
             if (currentCardIndex < currentReviewSession.length) {
                 const card = currentReviewSession[currentCardIndex];
@@ -1922,6 +2067,28 @@
             } else {
                 showNotification('⚠️ Нет активной карточки');
             }
+        }
+
+        function showCardInfo() {
+            if (!currentReviewSession || currentCardIndex >= currentReviewSession.length) {
+                showNotification('ℹ️ Нет активной карточки');
+                return;
+            }
+            
+            const card = currentReviewSession[currentCardIndex];
+            if (!card) {
+                showNotification('⚠️ Карточка не найдена');
+                return;
+            }
+            
+            const now = Date.now();
+            const daysLeft = card.nextReview ? Math.ceil((card.nextReview - now) / (1000 * 60 * 60 * 24)) : 0;
+            const direction = (card.direction || cardDirection) === 'hi-ru' ? 'Хинди → Русский' : 'Русский → Хинди';
+            const hasHighlight = card.highlightedWord && card.highlightedWord.trim() !== '';
+            const createdDate = card.created ? new Date(card.created).toLocaleDateString() : 'неизвестно';
+            const lastReviewed = card.lastReviewed ? new Date(card.lastReviewed).toLocaleDateString() : 'никогда';
+            
+            alert(`ℹ️ ИНФОРМАЦИЯ О КАРТОЧКЕ:\n\n🎯 Сторона А: ${card.front}\n🎯 Сторона Б: ${card.back}\n🔄 Направление: ${direction}\n📊 Сложность: ${card.difficulty || 'новая'}\n🔥 Серия: ${card.streak || 0} подряд\n⏰ Интервал: ${card.interval || 1} дней\n📅 Следующий показ: ${daysLeft > 0 ? `через ${daysLeft} дней` : 'готово к повторению'}\n📅 Создана: ${createdDate}\n📅 Последний раз: ${lastReviewed}\n${hasHighlight ? `🔍 Выделенное слово: "${card.highlightedWord}"` : ''}`);
         }
 
         // ==================== СТАТИСТИКА ====================
@@ -1993,28 +2160,6 @@
                 statsToggle.textContent = statsExpanded ? '📈 Скрыть детали' : '📈 Показать детали';
             }
             updateStats();
-        }
-
-        function showCardInfo() {
-            if (!currentReviewSession || currentCardIndex >= currentReviewSession.length) {
-                showNotification('ℹ️ Нет активной карточки');
-                return;
-            }
-            
-            const card = currentReviewSession[currentCardIndex];
-            if (!card) {
-                showNotification('⚠️ Карточка не найдена');
-                return;
-            }
-            
-            const now = Date.now();
-            const daysLeft = card.nextReview ? Math.ceil((card.nextReview - now) / (1000 * 60 * 60 * 24)) : 0;
-            const direction = (card.direction || cardDirection) === 'hi-ru' ? 'Хинди → Русский' : 'Русский → Хинди';
-            const hasHighlight = card.highlightedWord && card.highlightedWord.trim() !== '';
-            const createdDate = card.created ? new Date(card.created).toLocaleDateString() : 'неизвестно';
-            const lastReviewed = card.lastReviewed ? new Date(card.lastReviewed).toLocaleDateString() : 'никогда';
-            
-            alert(`ℹ️ ИНФОРМАЦИЯ О КАРТОЧКЕ:\n\n🎯 Сторона А: ${card.front}\n🎯 Сторона Б: ${card.back}\n🔄 Направление: ${direction}\n📊 Сложность: ${card.difficulty || 'новая'}\n🔥 Серия: ${card.streak || 0} подряд\n⏰ Интервал: ${card.interval || 1} дней\n📅 Следующий показ: ${daysLeft > 0 ? `через ${daysLeft} дней` : 'готово к повторению'}\n📅 Создана: ${createdDate}\n📅 Последний раз: ${lastReviewed}\n${hasHighlight ? `🔍 Выделенное слово: "${card.highlightedWord}"` : ''}`);
         }
 
         // ==================== ОЗВУЧКА ====================
@@ -2149,74 +2294,6 @@
                 }
             }, 3000);
         }
-
-        // ==================== ОБНОВЛЕННЫЕ ФУНКЦИИ ПОВТОРЕНИЯ ====================
-function startReviewSession(mode = "due") {
-    console.log(`🚀 Начало сессии в режиме: ${mode}`);
-    
-    // Обновляем режим и кнопки
-    reviewMode = mode;
-    updateModeButtons();
-    
-    // Показываем кнопки оценки
-    const ratingButtons = document.getElementById('ratingButtons');
-    const additionalButtons = document.getElementById('additionalButtons');
-    if (ratingButtons) ratingButtons.style.display = 'flex';
-    if (additionalButtons) additionalButtons.style.display = 'flex';
-    
-    // Запускаем повторение
-    startReview(mode);
-}
-
-function updateModeButtons() {
-    const modeDue = document.getElementById('modeDue');
-    const modeNew = document.getElementById('modeNew');
-    const modeAll = document.getElementById('modeAll');
-    
-    if (modeDue && modeNew && modeAll) {
-        modeDue.classList.remove('active');
-        modeNew.classList.remove('active');
-        modeAll.classList.remove('active');
-        
-        const activeBtn = document.getElementById(`mode${reviewMode.charAt(0).toUpperCase() + reviewMode.slice(1)}`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-        }
-    }
-}
-
-// Обновите функцию showCard() чтобы скрывать кнопки когда сессия завершена:
-function showCard() {
-    if (!currentReviewSession || currentCardIndex >= currentReviewSession.length) {
-        const cardContent = document.getElementById('cardContent');
-        const cardAnswer = document.getElementById('cardAnswer');
-        const ratingButtons = document.getElementById('ratingButtons');
-        const additionalButtons = document.getElementById('additionalButtons');
-        
-        if (cardContent) cardContent.textContent = '🎉 Сессия завершена!';
-        if (cardAnswer) {
-            cardAnswer.textContent = 'Выберите режим для новой сессии';
-            cardAnswer.classList.remove('show');
-        }
-        
-        // Скрываем кнопки оценки
-        if (ratingButtons) ratingButtons.style.display = 'none';
-        if (additionalButtons) additionalButtons.style.display = 'none';
-        
-        updateSessionProgress(0, 0);
-        
-        setTimeout(() => {
-            const now = Date.now();
-            const dueCount = reviewCards.filter(c => c && (!c.nextReview || c.nextReview <= now)).length;
-            showNotification(`✅ Сессия завершена! Готовых карточек: ${dueCount}`);
-            updateStats();
-        }, 500);
-        
-        return;
-    }
-    
-    // ... остальной код функции showCard() ...
-}
     </script>
 </body>
 </html>
