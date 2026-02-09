@@ -815,16 +815,15 @@
             
             <!-- СТАТИСТИКА -->
             <div class="stats-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong>📊 Прогресс:</strong>
-                        <span id="statsText">Загружаем статистику...</span>
-                    </div>
-                    <button onclick="showStatistics()" class="action-btn" style="padding: 6px 12px; font-size: 12px; background: #6a11cb; color: white;">
-                        📈 Детали
-                    </button>
-                </div>
-            </div>
+                <div class="stats-header">
+    <div>
+        <strong>📊 Прогресс:</strong>
+        <span id="statsText">Загружаем статистику...</span>
+    </div>
+    <button onclick="toggleStats()" class="stats-toggle">
+        📈 Детали
+    </button>
+</div>
         </div>
 
         <!-- ФУТЕР -->
