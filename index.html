@@ -798,92 +798,92 @@
 
         <!-- ВКЛАДКА 3: ПОВТОРЕНИЕ -->
         <div id="repeat" class="tab-content">
-            <h3 style="color: #6a11cb; margin-bottom: 10px;">
-                🔄 Повторение слов 
-                <span id="sessionProgress" style="font-size: 0.8em; color: #666;">(0/0)</span>
-            </h3>
+    <h3 style="color: #6a11cb; margin-bottom: 10px;">
+        🔄 Повторение слов 
+        <span id="sessionProgress" style="font-size: 0.8em; color: #666;">(0/0)</span>
+    </h3></div>
             
             <!-- РЕЖИМЫ ПОВТОРЕНИЯ -->
             <div class="mode-selector">
-                <button onclick="startReview('due')" class="mode-btn" id="modeDue">
-                    📅 Готовые к повторению
-                </button>
-                <button onclick="startReview('new')" class="mode-btn" id="modeNew">
-                    🆕 Только новые
-                </button>
-                <button onclick="startReview('all')" class="mode-btn" id="modeAll">
-                    📚 Все карточки
-                </button>
-            </div>
+        <button onclick="startReviewSession('due')" class="mode-btn" id="modeDue">
+            📅 Готовые к повторению
+        </button>
+        <button onclick="startReviewSession('new')" class="mode-btn" id="modeNew">
+            🆕 Только новые
+        </button>
+        <button onclick="startReviewSession('all')" class="mode-btn" id="modeAll">
+            📚 Все карточки
+        </button>
+    </div>
             
             <!-- ВЫБОР НАПРАВЛЕНИЯ -->
             <div style="margin: 15px 0;">
-                <p style="color: #666; margin-bottom: 8px; font-size: 14px;">Направление карточек:</p>
-                <div class="direction-selector">
-                    <button onclick="setCardDirection('hi-ru')" class="direction-btn" id="dirHiRu">
-                        🇮🇳 Хинди → Русский 🇷🇺
-                    </button>
-                    <button onclick="setCardDirection('ru-hi')" class="direction-btn" id="dirRuHi">
-                        🇷🇺 Русский → Хинди 🇮🇳
-                    </button>
-                </div>
-            </div>
+        <p style="color: #666; margin-bottom: 8px; font-size: 14px;">Направление карточек:</p>
+        <div class="direction-selector">
+            <button onclick="setCardDirection('hi-ru')" class="direction-btn" id="dirHiRu">
+                🇮🇳 Хинди → Русский 🇷🇺
+            </button>
+            <button onclick="setCardDirection('ru-hi')" class="direction-btn" id="dirRuHi">
+                🇷🇺 Русский → Хинди 🇮🇳
+            </button>
+        </div>
+    </div>
 
             <!-- КАРТОЧКА -->
             <div id="flashcard" class="flashcard-container" onclick="toggleCardAnswer()">
-                <div id="cardContent" class="flashcard-content">
-                    Выберите режим и нажмите "Начать повторение"
-                </div>
-                <div id="cardAnswer" class="flashcard-answer">
-                    <!-- Перевод будет здесь -->
-                </div>
-            </div>
+        <div id="cardContent" class="flashcard-content">
+            Выберите режим повторения выше ↓
+        </div>
+        <div id="cardAnswer" class="flashcard-answer">
+            <!-- Перевод будет здесь -->
+        </div>
+    </div>
 
             <!-- КНОПКИ ОЦЕНКИ -->
-            <div class="action-buttons">
-                <button onclick="rateCard('again')" class="action-btn" style="background: #ff4444; color: white;">
-                    🔴 Снова
-                </button>
-                <button onclick="rateCard('hard')" class="action-btn" style="background: #ff9800; color: white;">
-                    🟠 Сложно
-                </button>
-                <button onclick="rateCard('good')" class="action-btn" style="background: #2196f3; color: white;">
-                    🔵 Нормально
-                </button>
-                <button onclick="rateCard('easy')" class="action-btn" style="background: #4caf50; color: white;">
-                    🟢 Легко
-                </button>
-            </div>
+            <div id="ratingButtons" class="action-buttons" style="display: none;">
+        <button onclick="rateCard('again')" class="action-btn" style="background: #ff4444; color: white;">
+            🔴 Снова
+        </button>
+        <button onclick="rateCard('hard')" class="action-btn" style="background: #ff9800; color: white;">
+            🟠 Сложно
+        </button>
+        <button onclick="rateCard('good')" class="action-btn" style="background: #2196f3; color: white;">
+            🔵 Нормально
+        </button>
+        <button onclick="rateCard('easy')" class="action-btn" style="background: #4caf50; color: white;">
+            🟢 Легко
+        </button>
+    </div>
             
             <!-- ДОПОЛНИТЕЛЬНЫЕ КНОПКИ -->
-            <div class="action-buttons" style="margin-top: 10px;">
-                <button onclick="toggleCardAnswer()" class="action-btn" style="background: #9c27b0; color: white;">
-                    📖 Показать/скрыть ответ
-                </button>
-                <button onclick="speakCurrentCard()" class="action-btn" style="background: #6a11cb; color: white;">
-                    🔊 Озвучить
-                </button>
-                <button onclick="showCardInfo()" class="action-btn" style="background: #607d8b; color: white;">
-                    ℹ️ Инфо
-                </button>
-            </div>
+            <div id="additionalButtons" class="action-buttons" style="margin-top: 10px; display: none;">
+        <button onclick="toggleCardAnswer()" class="action-btn" style="background: #9c27b0; color: white;">
+            📖 Показать/скрыть ответ
+        </button>
+        <button onclick="speakCurrentCard()" class="action-btn" style="background: #6a11cb; color: white;">
+            🔊 Озвучить
+        </button>
+        <button onclick="showCardInfo()" class="action-btn" style="background: #607d8b; color: white;">
+            ℹ️ Инфо
+        </button>
+    </div>
             
             <!-- СТАТИСТИКА -->
             <div class="stats-panel">
-                <div class="stats-header">
-                    <div>
-                        <strong>📊 Прогресс:</strong>
-                        <span id="statsText">Загружаем статистику...</span>
-                    </div>
-                    <button onclick="toggleStats()" class="stats-toggle">
-                        📈 Детали
-                    </button>
-                </div>
-                <div id="statsDetails" class="stats-details">
-                    <!-- Детальная статистика будет здесь -->
-                </div>
+        <div class="stats-header">
+            <div>
+                <strong>📊 Статистика:</strong>
+                <span id="statsText">Выберите режим повторения</span>
             </div>
+            <button onclick="toggleStats()" class="stats-toggle">
+                📈 Детали
+            </button>
         </div>
+        <div id="statsDetails" class="stats-details">
+            <!-- Детальная статистика будет здесь -->
+        </div>
+    </div>
+</div>
 
         <!-- ФУТЕР -->
         <footer style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #f0f0f0; color: #666; font-size: 0.9rem;">
